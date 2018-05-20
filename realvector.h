@@ -18,6 +18,7 @@ public:
     RealVector& operator *= (double rhs);
     RealVector& operator -= (RealVector rhs);
     RealVector& operator /= (double rhs);
+    double& operator [] (size_t i);
 };
 
 RealVector operator + (RealVector lhs, RealVector rhs);

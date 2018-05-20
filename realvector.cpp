@@ -15,7 +15,7 @@ RealVector& RealVector::operator+= (RealVector rhs) {
     }
 
     for(size_t i=0; i<coords.size(); i++){
-        coords[i] += rhs.coords[i];
+        coords[i] += rhs[i];
     }
 
     return *this;
@@ -34,6 +34,10 @@ RealVector& RealVector::operator-= (RealVector rhs) {
 
 RealVector& RealVector::operator/= (double rhs) {
     return (*this) *= (1/rhs);
+}
+
+double& RealVector::operator[] (size_t i){
+    return coords[i];
 }
 
 RealVector operator + (RealVector lhs, RealVector rhs) {
@@ -63,7 +67,7 @@ double operator * (RealVector lhs, RealVector rhs) {
 
     double dot_prod = 0.;
     for(size_t i=0; i<lhs.coords.size(); i++){
-        dot_prod += lhs.coords[i] * rhs.coords[i];
+        dot_prod += lhs[i] * rhs[i];
     }
 
     return dot_prod;
@@ -71,7 +75,7 @@ double operator * (RealVector lhs, RealVector rhs) {
 
 std::ostream& operator << (std::ostream& out, RealVector v) {
     for(size_t i=0; i<v.coords.size(); i++){
-        out << v.coords[i] << " ";
+        out << v[i] << " ";
     }
     return out;
 }

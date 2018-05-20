@@ -9,7 +9,7 @@ CONFIG -= app_bundle
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -19,12 +19,15 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 SOURCES += main.cpp \
     integrator.cpp \
     realvector.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    qcustomplot.cpp \
+    physics.cpp
 
 HEADERS += \
     integrator.h \
     realvector.h \
-    mainwindow.h
+    mainwindow.h \
+    qcustomplot.h
 
 QMAKE_CXXFLAGS += -std=c++14
 

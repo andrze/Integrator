@@ -3,6 +3,31 @@
 #include <cmath>
 #include <ostream>
 
+std::vector<std::vector<double> > PlotSet::transpose(){
+
+    std::vector<std::vector<double> > result;
+
+    for(size_t j=0; j<vals[0].coords.size(); j++){
+        std::vector<double> line;
+        for(size_t i=0; i<vals.size(); i++){
+            line.push_back(vals[i][j]);
+        }
+        result.push_back(line);
+    }
+
+    return result;
+}
+
+std::vector<double> PlotSet::time_exp(){
+    std::vector<double> new_times;
+
+    for(auto t: times){
+        new_times.push_back(exp(t));
+    }
+
+    return new_times;
+}
+
 std::ostream& operator << (std::ostream& out, PlotSet p){
     for(size_t i=0; i<p.vals.size(); i++){
         out << p.times[i] << " " << p.vals[i] << std::endl;

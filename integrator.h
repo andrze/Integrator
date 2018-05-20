@@ -9,6 +9,8 @@ struct PlotSet
     std::vector<RealVector > vals;
     std::vector<double> times;
 
+    std::vector<std::vector<double> > transpose();
+    std::vector<double> time_exp();
 };
 
 std::ostream& operator << (std::ostream& out, PlotSet p);
