@@ -11,12 +11,14 @@
 #include "realvector.h"
 #include "physics.cpp"
 
+extern const EquationSet equations;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    integrator = Integrator(equations);
 }
 
 MainWindow::~MainWindow()
@@ -25,27 +27,14 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::update(){
-    std::vector<double> coords({ui->positionBox->value(), ui->velocityBox->value()});
-    RealVector start(coords);
+    PlotSet p = this->integrate();
 
-    EquationSet eq;
-    eq.derivatives = std::vector<std::function<double(RealVector)> >{k_der, l_der};
-
-    Integrator i(eq);
-
-    PlotSet p = i.integrate(ui->startTimeBox->value(),
-                            ui->endTimeBox->value(),
-                            ui->deltaTBox->value(), start);
-
-    //std::ofstream file(ui->filenameEdit->text().toStdString());
-    //file << p;
-
-    // generate some data:
     std::vector<std::vector<double> > results = p.transpose();
 
-    std::vector<QCustomPlot*> plots{ui->posPlot, ui->velPlot};
+    std::vector<QCustomPlot*> plots{ui->kappaPlot, ui->lambdaPlot, ui->etaPlot,
+                                    ui->lambda2Plot, ui->lambda3Plot, ui->lambda4Plot};
 
-    QVector<double> x=QVector<double>::fromStdVector(p.time_exp());
+    QVector<double> x=QVector<double>::fromStdVector(p.times);
 
     for(size_t i=0; i<plots.size(); i++){
         auto plot = plots[i];
@@ -53,12 +42,24 @@ void MainWindow::update(){
         QVector<double> y = QVector<double>::fromStdVector(vals);
         plot->addGraph();
         plot->graph(0)->setData(x, y);
-        plot->xAxis->setRange(0.,1.5);
+        plot->xAxis->setRange(x.first(),x.last());
         auto min = std::min_element(vals.begin(), vals.end());
         auto max = std::max_element(vals.begin(), vals.end());
         plot->yAxis->setRange((*min)-0.25, (*max)+0.25),
         plot->replot();
     }
+}
+
+PlotSet MainWindow::integrate(){
+    std::vector<double> coords({ui->kappaBox->value(), ui->lambdaBox->value(), ui->etaBox->value(),
+                                ui->lambda2Box->value(), ui->lambda3Box->value(), ui->lambda4Box->value()});
+    RealVector start(coords);
+
+
+
+    return integrator.integrate(ui->startTimeBox->value(),
+                                ui->endTimeBox->value(),
+                                ui->deltaTBox->value(), start);
 }
 
 void MainWindow::on_fileButton_clicked()
@@ -71,24 +72,25 @@ void MainWindow::on_fileButton_clicked()
         if( filename.size() < 4 || filename.substr(filename.size()-4,4) != ".csv" ){
             filename += ".csv";
         }
-        ui->runButton->setEnabled(true);
+        ui->saveButton->setEnabled(true);
         ui->filenameEdit->setText(tr(&filename[0]));
     }
 }
 
 
-void MainWindow::on_runButton_clicked()
+void MainWindow::on_saveButton_clicked()
+{
+    PlotSet p = this->integrate();
+    std::ofstream file(ui->filenameEdit->text().toStdString());
+    file << p;
+}
+
+void MainWindow::on_kappaBox_valueChanged(double)
 {
     this->update();
 }
 
-void MainWindow::on_velocityBox_valueChanged(double)
-{
-    this->update();
-}
-
-
-void MainWindow::on_positionBox_valueChanged(double)
+void MainWindow::on_lambdaBox_valueChanged(double)
 {
     this->update();
 }
@@ -107,3 +109,24 @@ void MainWindow::on_deltaTBox_valueChanged(double)
 {
     this->update();
 }
+
+void MainWindow::on_etaBox_valueChanged(double)
+{
+    this->update();
+}
+
+void MainWindow::on_lambda2Box_valueChanged(double)
+{
+    this->update();
+}
+
+void MainWindow::on_lambda3Box_valueChanged(double)
+{
+    this->update();
+}
+
+void MainWindow::on_lambda4Box_valueChanged(double)
+{
+    this->update();
+}
+

@@ -58,9 +58,6 @@ PlotSet Integrator::integrate(double start_t, double end_t, double delta_t,
         throw std::invalid_argument( "It takes non-positive number of steps from start to end" );
     }
 
-    plots.vals.push_back(point);
-    plots.times.push_back(t);
-
     for(int i=0; i<num_of_steps; i++){
         point = this->rk4(point, delta_t);
         t += delta_t;
@@ -74,11 +71,13 @@ PlotSet Integrator::integrate(double start_t, double end_t, double delta_t,
 
 RealVector Integrator::rk4(RealVector point, double delta_t){
 
-    RealVector first, second, third, fourth, final;
+    RealVector first_eval, first, second, third, fourth, final;
 
     first = point;
 
-    second = first + delta_t/2*equations.evaluate(first);
+    first_eval = equations.evaluate(first);
+
+    second = first + delta_t/2*first_eval;
 
     third = first + delta_t/2*equations.evaluate(second);
 
@@ -88,6 +87,12 @@ RealVector Integrator::rk4(RealVector point, double delta_t){
                      + 2*equations.evaluate(second)
                      + 2*equations.evaluate(third)
                      + equations.evaluate(fourth))*delta_t/6.;
+
+    for(size_t i=0; i<equations.differential.size(); i++){
+        if(!equations.differential[i]){
+            final[i] = first_eval[i];
+        }
+    }
 
     return final;
 }

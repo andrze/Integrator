@@ -80,16 +80,26 @@ std::ostream& operator << (std::ostream& out, RealVector v) {
     return out;
 }
 
+EquationSet::EquationSet(){
+
+}
+
+EquationSet::EquationSet(std::vector<std::function<double (RealVector)> > equations,
+                         std::vector<bool> differential){
+    this->equations = equations;
+    this->differential = differential;
+}
+
 RealVector EquationSet::evaluate(RealVector point){
 
-    if(point.coords.size() != derivatives.size()){
+    if(point.coords.size() != equations.size()){
         throw std::invalid_argument( "Equations and point of evaluation have different dimensions" );
     }
 
     std::vector<double> coords;
 
     for(size_t i=0; i<point.coords.size(); i++){
-        coords.push_back( derivatives[i](point) );
+        coords.push_back( equations[i](point) );
     }
 
     return RealVector(coords);

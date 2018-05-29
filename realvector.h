@@ -32,7 +32,12 @@ std::ostream& operator << (std::ostream& out, RealVector v);
 
 struct EquationSet
 {
-    std::vector<std::function<double(RealVector ) > > derivatives;
+    EquationSet();
+    EquationSet(std::vector<std::function<double(RealVector ) > > equations,
+                std::vector<bool> differential);
+
+    std::vector<std::function<double(RealVector ) > > equations;
+    std::vector<bool> differential;
 
     RealVector evaluate(RealVector point);
 };
