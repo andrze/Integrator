@@ -35,10 +35,12 @@ struct EquationSet
 {
     EquationSet();
     EquationSet(std::vector<std::function<double(RealVector ) > > equations,
-                std::vector<bool> differential);
+                std::vector<bool> differential,
+                std::vector<int> scale);
 
     std::vector<std::function<double(RealVector ) > > equations;
     std::vector<bool> differential;
+    std::vector<int> scale;
 
     RealVector evaluate(RealVector point);
 };

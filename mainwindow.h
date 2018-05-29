@@ -33,9 +33,6 @@ private slots:
     void on_endTimeBox_valueChanged(double);
     void on_deltaTBox_valueChanged(double);
     void on_etaBox_valueChanged(double);
-    void on_lambda2Box_valueChanged(double);
-    void on_lambda3Box_valueChanged(double);
-    void on_lambda4Box_valueChanged(double);
 };
 
 #endif // MAINWINDOW_H

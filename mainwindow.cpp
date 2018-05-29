@@ -10,6 +10,7 @@
 #include "integrator.h"
 #include "realvector.h"
 #include "physics.cpp"
+#include <iostream>
 
 extern const EquationSet equations;
 
@@ -31,12 +32,12 @@ void MainWindow::update(){
 
     std::vector<std::vector<double> > results = p.transpose();
 
-    std::vector<QCustomPlot*> plots{ui->kappaPlot, ui->lambdaPlot, ui->etaPlot,
-                                    ui->lambda2Plot, ui->lambda3Plot, ui->lambda4Plot};
+    std::vector<QCustomPlot*> plots{ui->kappaPlot, ui->uPlot, ui->lambdaPlot, ui->etaPlot,
+                                    ui->kappa2Plot, ui->u2Plot, ui->lambda2Plot, ui->eta2Plot};
 
     QVector<double> x=QVector<double>::fromStdVector(p.times);
 
-    for(size_t i=0; i<plots.size(); i++){
+    for(size_t i=0; i<plots.size()/2; i++){
         auto plot = plots[i];
         std::vector<double> vals = results[i];
         QVector<double> y = QVector<double>::fromStdVector(vals);
@@ -47,15 +48,31 @@ void MainWindow::update(){
         auto max = std::max_element(vals.begin(), vals.end());
         plot->yAxis->setRange((*min)-0.25, (*max)+0.25),
         plot->replot();
+
+        //Unscaled plot
+        plot = plots[i+plots.size()/2];
+        for(int j=0; j<x.size(); j++){
+            vals[j] *= exp(integrator.equations.scale[i] * x[j]);
+        }
+        y = QVector<double>::fromStdVector(vals);
+        plot->addGraph();
+        plot->graph(0)->setData(x, y);
+        plot->xAxis->setRange(x.first(),x.last());
+        min = std::min_element(vals.begin(), vals.end());
+        max = std::max_element(vals.begin(), vals.end());
+        plot->yAxis->setRange((*min)-0.25, (*max)+0.25),
+        plot->replot();
+
+        if(i == 0){
+            std::cout << results[0][0] << ' ' << vals[vals.size()-1] << std::endl;
+        }
     }
 }
 
 PlotSet MainWindow::integrate(){
-    std::vector<double> coords({ui->kappaBox->value(), ui->lambdaBox->value(), ui->etaBox->value(),
-                                ui->lambda2Box->value(), ui->lambda3Box->value(), ui->lambda4Box->value()});
+    std::vector<double> coords({ui->kappaBox->value(), ui->uBox->value(),
+                                ui->lambdaBox->value(), ui->etaBox->value()});
     RealVector start(coords);
-
-
 
     return integrator.integrate(ui->startTimeBox->value(),
                                 ui->endTimeBox->value(),
@@ -111,21 +128,6 @@ void MainWindow::on_deltaTBox_valueChanged(double)
 }
 
 void MainWindow::on_etaBox_valueChanged(double)
-{
-    this->update();
-}
-
-void MainWindow::on_lambda2Box_valueChanged(double)
-{
-    this->update();
-}
-
-void MainWindow::on_lambda3Box_valueChanged(double)
-{
-    this->update();
-}
-
-void MainWindow::on_lambda4Box_valueChanged(double)
 {
     this->update();
 }

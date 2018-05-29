@@ -20,7 +20,7 @@ double k_der(RealVector x){
     return -1*x[0] + 6 * v_d(3.) * l(3, 1, 2*x[0]*x[1]);
 }
 
-double l_der(RealVector x){
+double u_der(RealVector x){
     return -x[1] + 18 * v_d(3.) * std::pow(x[1],2) * l(3, 2, 2*x[0]*x[1]);
 }
 
@@ -28,9 +28,9 @@ double zero(RealVector){
     return 0;
 }
 
-std::vector<std::function<double(RealVector)> > functions{k_der, l_der, zero,
-                                                          zero, zero, zero};
-std::vector<bool> differential{1,1,0,1,1,1};
-extern const EquationSet equations(functions, differential);
+std::vector<std::function<double(RealVector)> > functions{k_der, u_der, zero, zero};
+std::vector<bool> differential{1,1,1,0};
+std::vector<int> scale{1,1,0,0};
+extern const EquationSet equations(functions, differential, scale);
 
 

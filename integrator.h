@@ -23,9 +23,9 @@ public:
 
     PlotSet integrate(double start_t, double end_t, double delta_t,
                       RealVector starting_point);
+    EquationSet equations;
 
 private:
-    EquationSet equations;
     RealVector rk4(RealVector point, double delta_t);
 
 };
