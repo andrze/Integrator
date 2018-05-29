@@ -105,3 +105,16 @@ RealVector EquationSet::evaluate(RealVector point){
     return RealVector(coords);
 }
 
+RealVector& filter(RealVector& v, std::vector<bool> filter_vec){
+    if(v.coords.size() != filter_vec.size()){
+        throw std::invalid_argument( "Point and filter have different dimensions" );
+    }
+
+    for(size_t i=0; i<v.coords.size(); i++){
+        if(!filter_vec[i]){
+            v[i] = 0.;
+        }
+    }
+    return v;
+}
+

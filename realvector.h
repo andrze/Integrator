@@ -29,6 +29,7 @@ RealVector operator / (RealVector lhs, double rhs);
 double operator * (RealVector lhs, RealVector rhs);
 std::ostream& operator << (std::ostream& out, RealVector v);
 
+RealVector filter(RealVector v, std::vector<bool>);
 
 struct EquationSet
 {

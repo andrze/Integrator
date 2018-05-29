@@ -71,26 +71,30 @@ PlotSet Integrator::integrate(double start_t, double end_t, double delta_t,
 
 RealVector Integrator::rk4(RealVector point, double delta_t){
 
-    RealVector first_eval, first, second, third, fourth, final;
+    RealVector first, second, third, fourth, final;
+    RealVector first_eval, second_eval, third_eval, final_eval;
 
-    first = point;
-
-    first_eval = equations.evaluate(first);
+    first = filter(point, equations.differential);
+    first_eval = equations.evaluate(point);
 
     second = first + delta_t/2*first_eval;
+    second_eval = equations.evaluate(second);
 
-    third = first + delta_t/2*equations.evaluate(second);
+    third = first + delta_t/2*second_eval;
+    third_eval = equations.evaluate(third);
 
-    fourth = first + delta_t*equations.evaluate(third);
+    fourth = first + delta_t*third_eval;
 
-    final = point + (equations.evaluate(first)
-                     + 2*equations.evaluate(second)
-                     + 2*equations.evaluate(third)
+    final = first + (first_eval
+                     + 2*second_eval
+                     + 2*third_eval
                      + equations.evaluate(fourth))*delta_t/6.;
+
+    final_eval = equations.evaluate(final);
 
     for(size_t i=0; i<equations.differential.size(); i++){
         if(!equations.differential[i]){
-            final[i] = first_eval[i];
+            final[i] = final_eval[i];
         }
     }
 
