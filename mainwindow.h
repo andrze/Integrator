@@ -22,6 +22,7 @@ private:
 
     void update();
     PlotSet integrate();
+    PlotSet results;
 
 private slots:
 
@@ -33,6 +34,10 @@ private slots:
     void on_endTimeBox_valueChanged(double);
     void on_deltaTBox_valueChanged(double);
     void on_etaBox_valueChanged(double);
+    void on_uBox_valueChanged(double);
+    void on_ksenseBox_valueChanged(int arg1);
+    void on_usenseBox_valueChanged(int arg1);
+    void on_lsenseBox_valueChanged(int arg1);
 };
 
 #endif // MAINWINDOW_H

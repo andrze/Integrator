@@ -29,8 +29,14 @@ std::vector<double> PlotSet::time_exp(){
 }
 
 std::ostream& operator << (std::ostream& out, PlotSet p){
-    for(size_t i=0; i<p.vals.size(); i++){
-        out << p.times[i] << " " << p.vals[i] << std::endl;
+    if(p.times.empty()){
+        for(size_t i=0; i<p.vals.size(); i++){
+            out << p.vals[i] << std::endl;
+        }
+    } else {
+        for(size_t i=0; i<p.vals.size(); i++){
+            out << p.times[i] << " " << p.vals[i] << std::endl;
+        }
     }
 
     return out;

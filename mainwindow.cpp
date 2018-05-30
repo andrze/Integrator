@@ -37,6 +37,8 @@ void MainWindow::update(){
 
     QVector<double> x=QVector<double>::fromStdVector(p.times);
 
+    std::vector<double> res;
+
     for(size_t i=0; i<plots.size()/2; i++){
         auto plot = plots[i];
         std::vector<double> vals = results[i];
@@ -63,10 +65,11 @@ void MainWindow::update(){
         plot->yAxis->setRange((*min)-0.25, (*max)+0.25),
         plot->replot();
 
-        if(i == 0){
-            std::cout << results[0][0] << ' ' << vals[vals.size()-1] << std::endl;
-        }
+        res.push_back(results[i][0]);
+        res.push_back(vals[vals.size()-1]);
     }
+
+    this->results.vals.push_back(RealVector(res));
 }
 
 PlotSet MainWindow::integrate(){
@@ -97,9 +100,8 @@ void MainWindow::on_fileButton_clicked()
 
 void MainWindow::on_saveButton_clicked()
 {
-    PlotSet p = this->integrate();
     std::ofstream file(ui->filenameEdit->text().toStdString());
-    file << p;
+    file << results;
 }
 
 void MainWindow::on_kappaBox_valueChanged(double)
@@ -132,3 +134,25 @@ void MainWindow::on_etaBox_valueChanged(double)
     this->update();
 }
 
+
+void MainWindow::on_uBox_valueChanged(double)
+{
+    this->update();
+}
+
+void MainWindow::on_ksenseBox_valueChanged(int arg1)
+{
+    this->ui->kappaBox->setSingleStep(pow(10.,-arg1));
+}
+
+void MainWindow::on_usenseBox_valueChanged(int arg1)
+{
+    this->ui->uBox->setSingleStep(pow(10.,-arg1));
+}
+
+
+
+void MainWindow::on_lsenseBox_valueChanged(int arg1)
+{
+    this->ui->lambdaBox->setSingleStep(pow(10.,-arg1));
+}
