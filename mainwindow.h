@@ -33,11 +33,12 @@ private slots:
     void on_startTimeBox_valueChanged(double);
     void on_endTimeBox_valueChanged(double);
     void on_deltaTBox_valueChanged(double);
-    void on_etaBox_valueChanged(double);
     void on_uBox_valueChanged(double);
     void on_ksenseBox_valueChanged(int arg1);
     void on_usenseBox_valueChanged(int arg1);
     void on_lsenseBox_valueChanged(int arg1);
+    void on_dSpinBox_valueChanged(double arg1);
+    void on_fpButton_clicked();
 };
 
 #endif // MAINWINDOW_H

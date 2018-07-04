@@ -34,15 +34,13 @@ RealVector filter(RealVector v, std::vector<bool>);
 struct EquationSet
 {
     EquationSet();
-    EquationSet(std::vector<std::function<double(RealVector ) > > equations,
-                std::vector<bool> differential,
-                std::vector<int> scale);
+    EquationSet(std::vector<std::function<double (RealVector, double, double)> > equations,
+                std::vector<std::function<double (double, double)> > scale);
 
-    std::vector<std::function<double(RealVector ) > > equations;
-    std::vector<bool> differential;
-    std::vector<int> scale;
+    std::vector<std::function<double (RealVector, double, double ) > > equations;
+    std::vector<std::function<double (double, double)> >  scale;
 
-    RealVector evaluate(RealVector point);
+    RealVector evaluate(RealVector point, double eta, double d);
 };
 
 #endif // REALVECTOR_H

@@ -1,5 +1,7 @@
 #include "realvector.h"
 #include <stdexcept>
+#include <cmath>
+#include <iostream>
 
 RealVector::RealVector()
 {
@@ -84,14 +86,13 @@ EquationSet::EquationSet(){
 
 }
 
-EquationSet::EquationSet(std::vector<std::function<double (RealVector)> > equations,
-                         std::vector<bool> differential, std::vector<int> scale){
+EquationSet::EquationSet(std::vector<std::function<double (RealVector, double, double)> > equations,
+                         std::vector<std::function<double (double, double)> >  scale){
     this->equations = equations;
-    this->differential = differential;
     this->scale = scale;
 }
 
-RealVector EquationSet::evaluate(RealVector point){
+RealVector EquationSet::evaluate(RealVector point, double eta, double d){
 
     if(point.coords.size() != equations.size()){
         throw std::invalid_argument( "Equations and point of evaluation have different dimensions" );
@@ -100,7 +101,7 @@ RealVector EquationSet::evaluate(RealVector point){
     std::vector<double> coords;
 
     for(size_t i=0; i<point.coords.size(); i++){
-        coords.push_back( equations[i](point) );
+        coords.push_back( equations[i](point, eta, d) );
     }
 
     return RealVector(coords);

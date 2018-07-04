@@ -2,6 +2,9 @@
 #include <stdexcept>
 #include <cmath>
 #include <ostream>
+#include <limits>
+#include <iomanip>
+#include "physics.h"
 
 std::vector<std::vector<double> > PlotSet::transpose(){
 
@@ -29,6 +32,7 @@ std::vector<double> PlotSet::time_exp(){
 }
 
 std::ostream& operator << (std::ostream& out, PlotSet p){
+    out << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
     if(p.times.empty()){
         for(size_t i=0; i<p.vals.size(); i++){
             out << p.vals[i] << std::endl;
@@ -52,7 +56,7 @@ Integrator::Integrator(EquationSet equations){
 }
 
 PlotSet Integrator::integrate(double start_t, double end_t, double delta_t,
-                              RealVector starting_point){
+                              RealVector starting_point, double d){
 
     PlotSet plots;
     double t = start_t;
@@ -64,45 +68,41 @@ PlotSet Integrator::integrate(double start_t, double end_t, double delta_t,
         throw std::invalid_argument( "It takes non-positive number of steps from start to end" );
     }
 
+    plots.vals.push_back(point);
+    plots.times.push_back(t);
+    plots.etas.push_back(eta(point));
+
     for(int i=0; i<num_of_steps; i++){
-        point = this->rk4(point, delta_t);
+        point = this->rk4(point, delta_t, d);
         t += delta_t;
 
         plots.vals.push_back(point);
         plots.times.push_back(t);
+        plots.etas.push_back(eta(point));
     }
 
     return plots;
 }
 
-RealVector Integrator::rk4(RealVector point, double delta_t){
+RealVector Integrator::rk4(RealVector point, double delta_t, double d){
 
-    RealVector first, second, third, fourth, final;
-    RealVector first_eval, second_eval, third_eval, final_eval;
+    RealVector first=point, second, third, fourth, final;
+    RealVector first_eval, second_eval, third_eval;
 
-    first = filter(point, equations.differential);
-    first_eval = equations.evaluate(point);
+    first_eval = equations.evaluate(point, eta(first), d);
 
     second = first + delta_t/2*first_eval;
-    second_eval = equations.evaluate(second);
+    second_eval = equations.evaluate(second, eta(second), d);
 
     third = first + delta_t/2*second_eval;
-    third_eval = equations.evaluate(third);
+    third_eval = equations.evaluate(third, eta(third), d);
 
     fourth = first + delta_t*third_eval;
 
     final = first + (first_eval
                      + 2*second_eval
                      + 2*third_eval
-                     + equations.evaluate(fourth))*delta_t/6.;
-
-    final_eval = equations.evaluate(final);
-
-    for(size_t i=0; i<equations.differential.size(); i++){
-        if(!equations.differential[i]){
-            final[i] = final_eval[i];
-        }
-    }
+                     + equations.evaluate(fourth, eta(fourth), d))*delta_t/6.;
 
     return final;
 }

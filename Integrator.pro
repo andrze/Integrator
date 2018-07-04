@@ -27,9 +27,18 @@ HEADERS += \
     integrator.h \
     realvector.h \
     mainwindow.h \
-    qcustomplot.h
+    qcustomplot.h \
+    physics.h
 
 QMAKE_CXXFLAGS += -std=c++14
+
+# remove possible other optimization flags
+QMAKE_CXXFLAGS_RELEASE -= -O
+QMAKE_CXXFLAGS_RELEASE -= -O1
+QMAKE_CXXFLAGS_RELEASE -= -O2
+
+# add the desired -O3 if not present
+QMAKE_CXXFLAGS_RELEASE *= -O3
 
 FORMS += \
     mainwindow.ui

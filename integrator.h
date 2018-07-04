@@ -8,6 +8,7 @@ struct PlotSet
 {
     std::vector<RealVector > vals;
     std::vector<double> times;
+    std::vector<double> etas;
 
     std::vector<std::vector<double> > transpose();
     std::vector<double> time_exp();
@@ -22,11 +23,11 @@ public:
     Integrator(EquationSet equations);
 
     PlotSet integrate(double start_t, double end_t, double delta_t,
-                      RealVector starting_point);
+                      RealVector starting_point, double d);
     EquationSet equations;
 
 private:
-    RealVector rk4(RealVector point, double delta_t);
+    RealVector rk4(RealVector point, double delta_t, double d);
 
 };
 
