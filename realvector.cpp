@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <iostream>
+#include <physics.h>
 
 RealVector::RealVector()
 {
@@ -92,16 +93,17 @@ EquationSet::EquationSet(std::vector<std::function<double (RealVector, double, d
     this->scale = scale;
 }
 
-RealVector EquationSet::evaluate(RealVector point, double eta, double d){
+RealVector EquationSet::evaluate(RealVector point, double d){
 
     if(point.coords.size() != equations.size()){
         throw std::invalid_argument( "Equations and point of evaluation have different dimensions" );
     }
 
     std::vector<double> coords;
+    double e = eta(point);
 
     for(size_t i=0; i<point.coords.size(); i++){
-        coords.push_back( equations[i](point, eta, d) );
+        coords.push_back( equations[i](point, e, d) );
     }
 
     return RealVector(coords);

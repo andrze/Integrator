@@ -176,7 +176,7 @@ void MainWindow::on_fpButton_clicked()
     PlotSet res = integ.integrate(0, -20, -0.01,
                                   point, ui->dSpinBox->value());
     RealVector end = res.vals.back();
-    RealVector der = integ.equations.evaluate(res.vals.back(), eta(end),
+    RealVector der = integ.equations.evaluate(end,
                                               ui->dSpinBox->value());
 
     while(der[0]>=0.){
@@ -189,7 +189,7 @@ void MainWindow::on_fpButton_clicked()
         steps_left--;
 
         end = res.vals.back();
-        der = integ.equations.evaluate(end, eta(end),
+        der = integ.equations.evaluate(end,
                                        ui->dSpinBox->value());
         if(steps_left==0){
             ui->kappaBox->setValue(current);
@@ -213,7 +213,7 @@ void MainWindow::on_fpButton_clicked()
                               point, ui->dSpinBox->value());
 
         end = res.vals.back();
-        der = integ.equations.evaluate(end, eta(end),
+        der = integ.equations.evaluate(end,
                                        ui->dSpinBox->value());
     }
 

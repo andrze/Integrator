@@ -89,20 +89,20 @@ RealVector Integrator::rk4(RealVector point, double delta_t, double d){
     RealVector first=point, second, third, fourth, final;
     RealVector first_eval, second_eval, third_eval;
 
-    first_eval = equations.evaluate(point, eta(first), d);
+    first_eval = equations.evaluate(point, d);
 
     second = first + delta_t/2*first_eval;
-    second_eval = equations.evaluate(second, eta(second), d);
+    second_eval = equations.evaluate(second, d);
 
     third = first + delta_t/2*second_eval;
-    third_eval = equations.evaluate(third, eta(third), d);
+    third_eval = equations.evaluate(third, d);
 
     fourth = first + delta_t*third_eval;
 
     final = first + (first_eval
                      + 2*second_eval
                      + 2*third_eval
-                     + equations.evaluate(fourth, eta(fourth), d))*delta_t/6.;
+                     + equations.evaluate(fourth, d))*delta_t/6.;
 
     return final;
 }

@@ -40,7 +40,7 @@ struct EquationSet
     std::vector<std::function<double (RealVector, double, double ) > > equations;
     std::vector<std::function<double (double, double)> >  scale;
 
-    RealVector evaluate(RealVector point, double eta, double d);
+    RealVector evaluate(RealVector point, double d);
 };
 
 #endif // REALVECTOR_H
