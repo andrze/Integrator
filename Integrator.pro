@@ -21,7 +21,8 @@ SOURCES += main.cpp \
     realvector.cpp \
     mainwindow.cpp \
     qcustomplot.cpp \
-    physics.cpp
+    physics.cpp \
+    simpson.cpp
 
 HEADERS += \
     integrator.h \
