@@ -83,32 +83,6 @@ std::ostream& operator << (std::ostream& out, RealVector v) {
     return out;
 }
 
-EquationSet::EquationSet(){
-
-}
-
-EquationSet::EquationSet(std::vector<std::function<double (RealVector, double, double)> > equations,
-                         std::vector<std::function<double (double, double)> >  scale){
-    this->equations = equations;
-    this->scale = scale;
-}
-
-RealVector EquationSet::evaluate(RealVector point, double d){
-
-    if(point.coords.size() != equations.size()){
-        throw std::invalid_argument( "Equations and point of evaluation have different dimensions" );
-    }
-
-    std::vector<double> coords;
-    double e = eta(point);
-
-    for(size_t i=0; i<point.coords.size(); i++){
-        coords.push_back( equations[i](point, e, d) );
-    }
-
-    return RealVector(coords);
-}
-
 RealVector filter(RealVector v, std::vector<bool> filter_vec){
     if(v.coords.size() != filter_vec.size()){
         throw std::invalid_argument( "Point and filter have different dimensions" );

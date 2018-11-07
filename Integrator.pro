@@ -22,14 +22,16 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     qcustomplot.cpp \
     physics.cpp \
-    simpson.cpp
+    simpson.cpp \
+    equationset.cpp
 
 HEADERS += \
     integrator.h \
     realvector.h \
     mainwindow.h \
     qcustomplot.h \
-    physics.h
+    physics.h \
+    equationset.h
 
 QMAKE_CXXFLAGS += -std=c++14
 
@@ -39,7 +41,7 @@ QMAKE_CXXFLAGS_RELEASE -= -O1
 QMAKE_CXXFLAGS_RELEASE -= -O2
 
 # add the desired -O3 if not present
-QMAKE_CXXFLAGS_RELEASE *= -O3
+QMAKE_CXXFLAGS_RELEASE += -O3
 
 FORMS += \
     mainwindow.ui
