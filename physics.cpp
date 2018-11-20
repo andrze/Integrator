@@ -156,8 +156,8 @@ double Mp_der(RealVector x, double L, double zp_der){
         double Gs2 = std::pow(Gs,2), Gp2 = std::pow(Gp,2);
 
         return (x[4]*R01(L,y)+zp_der*R(L,y))
-                   *(1/x[1])*((2*uq+u)*Gs2+(u+2*l)*Gp2)
-                     +(5*uq+4*l)*Gs*Gp*(Gs+Gp);
+                   *((1/x[1])*((2*uq+u)*Gs2+(u+2*l)*Gp2)
+                     +(6*uq+3*l)*Gs*Gp*(Gs+Gp));
     };
 
     return x[5]*L2*x[2]/(4*pi*a2)*integral(integrand);
