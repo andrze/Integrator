@@ -1,6 +1,7 @@
 #include <cmath>
 #include <vector>
 #include <valarray>
+#include <array>
 #include <iostream>
 #include "realvector.h"
 #include "physics.h"
@@ -192,7 +193,7 @@ double Zs_der(RealVector x, double L, double zp_der){
         Gs[1] = G(x[1],x[3],x[4],L,y);
         Gp[1] = G(x[2],x[4],x[4],L,y);
         //G[2] = ((2*uq+3*l)*std::pow(Gs,2)+ (u+6l)*std::pow(Gp,2));
-        for(int i=2; i<6; i++){
+        for(size_t i=2; i<6; i++){
             Gs[i] = Gs[1]*Gs[i-1];
             Gp[i] = Gp[1]*Gp[i-1];
         }
@@ -242,7 +243,7 @@ double Zp_der(RealVector x, double L){
         std::array<double,5> Gp;
         Gp[0] = 1;
         Gp[1] = G(x[2],x[4],x[4],L,y);
-        for(int i=2; i<5; i++){
+        for(size_t i=2; i<5; i++){
             Gp[i] = std::pow(Gp[1],i);
         }
 
@@ -271,7 +272,7 @@ double Zp_der(RealVector x, double L){
         std::array<double,5> Gp;
         Gp[0] = 1;
         Gp[1] = G(x[2],x[4],x[4],L,y);
-        for(int i=2; i<5; i++){
+        for(size_t i=2; i<5; i++){
             Gp[i] = std::pow(Gp[1],i);
         }
 

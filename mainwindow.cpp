@@ -5,52 +5,73 @@
 #include <QFileDialog>
 #include <algorithm>
 #include <cmath>
+#include <array>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "integrator.h"
 #include "realvector.h"
 #include "physics.h"
 #include <iostream>
+#include <limits>
 
-void setupPlot(QCustomPlot* plot, QVector<double> x, std::vector<double> vals){
+static std::vector<QPen> color{QPen(Qt::blue), QPen(Qt::red), QPen(Qt::green),
+                               QPen(Qt::darkYellow), QPen(Qt::darkMagenta), QPen(Qt::cyan)};
+
+
+void addGraph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double> vals,
+              bool logplot=false, int parts=1){
+    QVector<double> x = QVector<double>::fromStdVector(xvals);
     QVector<double> y = QVector<double>::fromStdVector(vals);
+
+    if(plot->yAxis->range().lower == 0. || plot->yAxis->range().lower == 5.){
+        plot->yAxis->setRange(0.9, 1.1);
+    }
+
+    int graph_num = plot->graphCount();
+    int limit = 6*parts;
+    if(graph_num >= limit){
+        plot->clearGraphs();
+        graph_num = 0;
+    }
     plot->addGraph();
-    plot->graph(0)->setData(x, y);
-    plot->xAxis->setRange(x.first(),x.last());
-    auto min = *std::min_element(vals.begin(), vals.end());
+    plot->graph(graph_num)->setPen(color[size_t(graph_num/parts)]);
+    if(parts>1 && graph_num%2 == 0){
+        auto pen = plot->graph(graph_num)->pen();
+        pen.setStyle(Qt::DotLine);
+        plot->graph(graph_num)->setPen(pen);
+    }
+    plot->graph(graph_num)->setData(x,y);
+
+    auto yrange = plot->yAxis->range();
     auto max = *std::max_element(vals.begin(), vals.end());
-    double diff = max - min;
-    if(diff == 0){
-        diff = 1.;
+    if(!logplot){
+        auto min = *std::min_element(vals.begin(), vals.end());
+        double diff = max - min;
+        if(diff <= 0){
+            diff = 1.;
+        }
+        plot->yAxis->setRange(std::min(min-diff/4, yrange.lower), std::max(max+diff/4, yrange.upper));
+
+    } else {
+        auto min = max;
+        for(auto v: vals){
+            if(v < min && v > 0.){
+                min = v;
+            }
+        }
+        plot->yAxis->setScaleType(QCPAxis::stLogarithmic);
+
+        if(max <= 0){
+            plot->yAxis->setRange(0,5);
+        } else {
+            double diff = max / min;
+            if(diff <= 1.){
+                diff = exp(5.);
+            }
+            diff = std::pow(diff, 0.2);
+            plot->yAxis->setRange(std::min(min/diff, yrange.lower), std::max(max*diff, yrange.upper));
+        }
     }
-    plot->yAxis->setRange(min-diff/4, max+diff/4);
-    plot->replot();
-}
-
-
-void setupPlot(QCustomPlot* plot, QVector<double> x, std::vector<double> vals, std::vector<double> vals2){
-    QVector<double> y = QVector<double>::fromStdVector(vals);
-    plot->addGraph();
-    plot->graph(0)->setPen(QPen(Qt::blue));
-    plot->graph(0)->setData(x, y);
-    plot->xAxis->setRange(x.first(),x.last());
-    auto min1 = std::min_element(vals.begin(), vals.end());
-    auto max1 = std::max_element(vals.begin(), vals.end());
-
-    QVector<double> y2 = QVector<double>::fromStdVector(vals2);
-    plot->addGraph();
-    plot->graph(1)->setPen(QPen(Qt::red));
-    plot->graph(1)->setData(x, y2);
-
-    auto min2 = std::min_element(vals2.begin(), vals2.end());
-    auto max2 = std::max_element(vals2.begin(), vals2.end());
-    double min = std::min(*min1, *min2);
-    double max = std::max(*max1, *max2);
-    double diff = max - min;
-    if(diff == 0){
-        diff = 1.;
-    }
-    plot->yAxis->setRange(min-diff/4, max+diff/4),
     plot->replot();
 }
 
@@ -59,6 +80,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    plots = std::vector<QCustomPlot*>{ui->alphaPlot, ui->msPlot, ui->mpPlot, ui->zPlot, ui->universalPlot,
+                ui->uPlot, ui->tauPlot, ui->yPlot, ui->stiffPlot, ui->etaPlot,};
+
     EquationSet equations;
     integrator = Integrator(equations);
     ui->asenseBox->valueChanged(ui->asenseBox->value());
@@ -83,10 +108,10 @@ void MainWindow::update(){
     ui->mpBox->setValue(a*tau);
     ui->zsSpinBox->setValue(a*Y+Z);
     ui->zpSpinBox->setValue(Z);
-
+    reset_xAxis();
 }
 
-PlotSet MainWindow::integrate(){
+std::vector<Plot> MainWindow::integrate(){
     std::vector<double> coords({ui->alphaBox->value(),
                                 ui->msBox->value(), ui->mpBox->value(),
                                 ui->zsSpinBox->value(), ui->zpSpinBox->value(),
@@ -114,19 +139,17 @@ void MainWindow::on_fileButton_clicked()
     }
 }
 
-
 void MainWindow::on_saveButton_clicked()
 {
 
     std::ofstream file(ui->filenameEdit->text().toStdString());
-    file << results;
+    //file << results;
 }
 
 void MainWindow::on_alphaBox_valueChanged(double)
 {
     this->update();
 }
-
 
 void MainWindow::on_uBox_valueChanged(double)
 {
@@ -173,108 +196,67 @@ void MainWindow::on_usenseBox_valueChanged(int arg1)
     this->ui->uBox->setSingleStep(pow(10.,-arg1));
 }
 
-
-
 void MainWindow::on_tsenseBox_valueChanged(int arg1)
 {
     this->ui->tauBox->setSingleStep(pow(10.,-arg1));
 }
 
-/*
-void MainWindow::on_fpButton_clicked()
-{
-    double lower = 0., current = ui->kappaBox->value(), upper;
-    int steps_left = 64;
-
-    std::vector<double> coords({current, ui->uBox->value(),
-                                ui->lambdaBox->value(), 1});
-    RealVector point(coords);
-    Integrator integ(this->integrator);
-    PlotSet res = integ.integrate(0, -20, -0.01,
-                                  point, ui->dSpinBox->value());
-    RealVector end = res.vals.back();
-    RealVector der = integ.equations.evaluate(end,
-                                              ui->dSpinBox->value());
-
-    while(der[0]>=0.){
-        current = 2*(std::abs(current) + 0.01);
-        point[0] = current;
-
-        res = integ.integrate(0, -20, -0.01,
-                              point, ui->dSpinBox->value());
-
-        steps_left--;
-
-        end = res.vals.back();
-        der = integ.equations.evaluate(end,
-                                       ui->dSpinBox->value());
-        if(steps_left==0){
-            ui->kappaBox->setValue(current);
-            return;
-        }
-    }
-
-    upper = current;
-
-    for(;steps_left>0; steps_left--){
-        if(der[0] < 0.){
-
-            upper = current;
-            current = (lower+current)/2;
-        } else {
-            lower = current;
-            current = (upper+current)/2;
-        }
-        point[0] = current;
-        res = integ.integrate(0, -20, -0.01,
-                              point, ui->dSpinBox->value());
-
-        end = res.vals.back();
-        der = integ.equations.evaluate(end,
-                                       ui->dSpinBox->value());
-    }
-
-    ui->kappaBox->setValue(current);
-    return;
-}*/
-
 void MainWindow::on_pushButton_clicked(){
 
-
-    PlotSet p = this->integrate();
-    std::vector<std::vector<double> > results = p.transpose();
+    std::vector<Plot> p = this->integrate();
     std::array<std::vector<double>, 6> plot_vals;
 
-    std::vector<QCustomPlot*> autoplots{ui->alphaPlot, ui->msPlot, ui->mpPlot};
+    addGraph(ui->alphaPlot, p[0].times, p[0].vals, true);
+
+    addGraph(ui->msPlot, p[1].times, p[1].vals, true);
+
+    addGraph(ui->mpPlot, p[2].times, p[2].vals, true);
+
+    addGraph(ui->zPlot, p[3].times, p[3].vals, true, 2);
+    addGraph(ui->zPlot, p[4].times, p[4].vals, true, 2);
+
+    for(size_t i=0; i<p[0].vals.size(); i++){
+        double a2 = std::pow(p[0].vals[i],2);
+        plot_vals[0].push_back(p[1].vals[i]/a2);
+        plot_vals[1].push_back(p[2].vals[i]/a2);
+        plot_vals[2].push_back((p[3].vals[i]-p[4].vals[i])/a2);
+        plot_vals[3].push_back(a2*p[4].vals[i]);
+        plot_vals[4].push_back(-exp(-p[4].times[i])*p[4].derivatives[i]/p[4].vals[i]);
+        plot_vals[5].push_back(-exp(-p[4].times[i])*p[4].derivatives[i]*a2/p[5].vals[i]);
+    }
+
     std::vector<QCustomPlot*> composite_plots{ui->uPlot, ui->tauPlot, ui->yPlot, ui->stiffPlot, ui->etaPlot, ui->universalPlot};
-
-    QVector<double> x;
-    for(auto&& t: p.times){
-        x.push_back(-log(t));
-    }
-
-
-    for(size_t i=0; i<autoplots.size(); i++){
-        autoplots[i]->yAxis->setScaleType(QCPAxis::stLogarithmic);
-        setupPlot(autoplots[i], x, results[i]);
-    }
-    ui->zPlot->yAxis->setScaleType(QCPAxis::stLogarithmic);
-    setupPlot(ui->zPlot, x, results[3], results[4]);
-
-    for(int i=0; i<x.size(); i++){
-        double a2 = std::pow(results[0][i],2);
-        plot_vals[0].push_back((results[1][i])/a2);
-        plot_vals[1].push_back((results[2][i])/a2);
-        plot_vals[2].push_back((results[3][i]-results[4][i])/a2);
-        plot_vals[3].push_back(a2*results[4][i]);
-        plot_vals[4].push_back(-p.times[i]*p.derivatives[i][4]/results[4][i]);
-        plot_vals[5].push_back(-p.times[i]*p.derivatives[i][4]*a2/results[5][i]);
-    }
-
     for(size_t i=0; i<composite_plots.size(); i++){
         composite_plots[i]->yAxis->setScaleType(QCPAxis::stLinear);
-        setupPlot(composite_plots[i], x, plot_vals[i]);
+        addGraph(composite_plots[i], p[0].times, plot_vals[i]);
     }
 
     std::cout<<"Obliczono"<<std::endl;
+}
+
+void MainWindow::on_clearButton_clicked()
+{
+
+    for(auto&& p: plots){
+        p->clearGraphs();
+        p->replot();
+    }
+}
+
+void MainWindow::reset_xAxis(){
+
+    for(auto&& p: plots){
+        double lower = ui->xMinSpinBox->value();
+        double upper = ui->xMaxSpinBox->value();
+        p->xAxis->setRange(lower, upper);
+        p->replot();
+    }
+}
+
+void MainWindow::on_xMinSpinBox_valueChanged(double){
+    reset_xAxis();
+}
+
+void MainWindow::on_xMaxSpinBox_valueChanged(double){
+    reset_xAxis();
 }

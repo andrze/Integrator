@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "qcustomplot.h"
 #include "integrator.h"
 
 namespace Ui {
@@ -13,7 +14,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
 private:
@@ -21,8 +22,10 @@ private:
     Integrator integrator;
 
     void update();
-    PlotSet integrate();
-    PlotSet results;
+    std::vector<Plot> integrate();
+    std::vector<Plot>  results;
+    void reset_xAxis();
+    std::vector<QCustomPlot*> plots;
 
 private slots:
 
@@ -41,6 +44,9 @@ private slots:
     void on_tsenseBox_valueChanged(int arg1);
     //void on_fpButton_clicked();
     void on_pushButton_clicked();
+    void on_clearButton_clicked();
+    void on_xMinSpinBox_valueChanged(double);
+    void on_xMaxSpinBox_valueChanged(double);
 };
 
 #endif // MAINWINDOW_H

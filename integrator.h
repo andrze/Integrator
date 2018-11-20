@@ -5,17 +5,14 @@
 #include "equationset.h"
 
 
-struct PlotSet
+struct Plot
 {
-    std::vector<RealVector > vals;
-    std::vector<RealVector > derivatives;
+    std::vector<double> vals;
+    std::vector<double> derivatives;
     std::vector<double> times;
-
-    std::vector<std::vector<double> > transpose();
-    std::vector<double> time_exp();
 };
 
-std::ostream& operator << (std::ostream& out, PlotSet p);
+std::ostream& operator << (std::ostream& out, Plot p);
 
 class Integrator
 {
@@ -23,12 +20,12 @@ public:
     Integrator();
     Integrator(EquationSet equations);
 
-    PlotSet integrate(double start_t, double end_t, double delta_t,
+    std::vector<Plot> integrate(double start_t, double end_t, double delta_t,
                       RealVector starting_point);
     EquationSet equations;
 
 private:
-    RealVector rk4(RealVector point, double delta_t, double t, PlotSet *plots);
+    RealVector rk4(RealVector point, double delta_t, double t, std::vector<Plot> *plots);
 
 };
 

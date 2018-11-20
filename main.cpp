@@ -6,7 +6,7 @@
 
 int main(int argc, char *argv[])
 {
-    //feenableexcept(FE_INVALID | FE_OVERFLOW);
+    //feraiseexcept(FE_INVALID | FE_OVERFLOW);
     QApplication a(argc, argv);
     MainWindow w;
     w.show();
