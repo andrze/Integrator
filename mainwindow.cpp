@@ -24,7 +24,11 @@ void addGraph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double> 
     QVector<double> y = QVector<double>::fromStdVector(vals);
 
     if(plot->yAxis->range().lower == 0. || plot->yAxis->range().lower == 5.){
-        plot->yAxis->setRange(0.9, 1.1);
+        if(logplot){
+            plot->yAxis->setRange(0.9, 1.1);
+        } else {
+            plot->yAxis->setRange(0., 0.00000001);
+        }
     }
 
     int graph_num = plot->graphCount();
@@ -47,10 +51,9 @@ void addGraph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double> 
     if(!logplot){
         auto min = *std::min_element(vals.begin(), vals.end());
         double diff = max - min;
-        if(diff <= 0){
-            diff = 1.;
+        if(diff > 0){
+            plot->yAxis->setRange(std::min(min-diff/4, yrange.lower), std::max(max+diff/4, yrange.upper));
         }
-        plot->yAxis->setRange(std::min(min-diff/4, yrange.lower), std::max(max+diff/4, yrange.upper));
 
     } else {
         auto min = max;
@@ -193,4 +196,14 @@ void MainWindow::on_xMinSpinBox_valueChanged(double){
 
 void MainWindow::on_xMaxSpinBox_valueChanged(double){
     reset_xAxis();
+}
+
+void MainWindow::on_cubicRadioButton_clicked(){
+    ui->hexRadioButton->setChecked(false);
+    ui->cubicRadioButton->setChecked(true);
+}
+
+void MainWindow::on_hexRadioButton_clicked(){
+    ui->hexRadioButton->setChecked(true);
+    ui->cubicRadioButton->setChecked(false);
 }

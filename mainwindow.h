@@ -36,6 +36,8 @@ private slots:
     void on_clearButton_clicked();
     void on_xMinSpinBox_valueChanged(double);
     void on_xMaxSpinBox_valueChanged(double);
+    void on_cubicRadioButton_clicked();
+    void on_hexRadioButton_clicked();
 };
 
 #endif // MAINWINDOW_H
