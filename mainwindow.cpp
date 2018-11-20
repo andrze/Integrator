@@ -86,10 +86,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     EquationSet equations;
     integrator = Integrator(equations);
-    ui->asenseBox->valueChanged(ui->asenseBox->value());
-    ui->usenseBox->valueChanged(ui->usenseBox->value());
     ui->tsenseBox->valueChanged(ui->tsenseBox->value());
-    this->update();
+    this->reset_xAxis();
 }
 
 MainWindow::~MainWindow()
@@ -97,24 +95,10 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::update(){
-    double a = std::pow(ui->alphaBox->value(),2);
-    double u = ui->uBox->value();
-    double tau = ui->tauBox->value();
-    double Z = ui->ZSpinBox->value();
-    double Y = ui->YSpinBox->value();
-
-    ui->msBox->setValue(a*u);
-    ui->mpBox->setValue(a*tau);
-    ui->zsSpinBox->setValue(a*Y+Z);
-    ui->zpSpinBox->setValue(Z);
-    reset_xAxis();
-}
-
 std::vector<Plot> MainWindow::integrate(){
-    std::vector<double> coords({ui->alphaBox->value(),
-                                ui->msBox->value(), ui->mpBox->value(),
-                                ui->zsSpinBox->value(), ui->zpSpinBox->value(),
+    std::vector<double> coords({1,
+                                1, ui->tauBox->value(),
+                                1, 1,
                                 ui->TSpinBox->value()});
     RealVector start(coords);
 
@@ -144,56 +128,6 @@ void MainWindow::on_saveButton_clicked()
 
     std::ofstream file(ui->filenameEdit->text().toStdString());
     //file << results;
-}
-
-void MainWindow::on_alphaBox_valueChanged(double)
-{
-    this->update();
-}
-
-void MainWindow::on_uBox_valueChanged(double)
-{
-    this->update();
-}
-
-void MainWindow::on_tauBox_valueChanged(double)
-{
-    this->update();
-}
-
-void MainWindow::on_ZSpinBox_valueChanged(double)
-{
-    this->update();
-}
-
-void MainWindow::on_YSpinBox_valueChanged(double)
-{
-    this->update();
-}
-
-void MainWindow::on_startTimeBox_valueChanged(double)
-{
-    this->update();
-}
-
-void MainWindow::on_endTimeBox_valueChanged(double)
-{
-    this->update();
-}
-
-void MainWindow::on_deltaTBox_valueChanged(double)
-{
-    this->update();
-}
-
-void MainWindow::on_asenseBox_valueChanged(int arg1)
-{
-    this->ui->alphaBox->setSingleStep(pow(10.,-arg1));
-}
-
-void MainWindow::on_usenseBox_valueChanged(int arg1)
-{
-    this->ui->uBox->setSingleStep(pow(10.,-arg1));
 }
 
 void MainWindow::on_tsenseBox_valueChanged(int arg1)
