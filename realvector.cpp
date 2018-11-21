@@ -2,7 +2,6 @@
 #include <stdexcept>
 #include <cmath>
 #include <iostream>
-#include <physics.h>
 
 RealVector::RealVector()
 {

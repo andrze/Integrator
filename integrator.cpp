@@ -5,8 +5,6 @@
 #include <limits>
 #include <iomanip>
 #include <iostream>
-#include "physics.h"
-
 
 Integrator::Integrator()
 {

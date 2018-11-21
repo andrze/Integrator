@@ -3,6 +3,7 @@
 #include <vector>
 #include <functional>
 #include <limits>
+#include "simpson.h"
 
 double integral(std::function<double(double)> func){
     double h0=0.01;

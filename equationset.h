@@ -8,7 +8,9 @@
 class EquationSet
 {
 public:
-    EquationSet();
+    EquationSet(bool cubic=true);
+
+    bool cubic;
 
     RealVector evaluate(RealVector point, double L);
 };

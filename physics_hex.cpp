@@ -4,104 +4,11 @@
 #include <array>
 #include <iostream>
 #include "realvector.h"
-#include "physics.h"
-#include "simpson.cpp"
+#include "physics_hex.h"
+#include "simpson.h"
+#include "regulator.h"
 
-const double pi = std::acos(-1);
-
-double R(double L, double y){
-    if(y<5e-2){
-        double y2 = y*y;
-        return 2*L*L*(1-y/2+y2/12-y2*y2/720);
-    }
-    if(y>20){
-        return 0.;
-    }
-    return 2*y*L*L/expm1(y);
-}
-
-double R10(double , double y){
-    if(y<5e-2){
-        return -(1-y/3+y*y*y/90);
-    }
-    if(y>20){
-        return 0.;
-    }
-    double expm = expm1(y);
-    double denominator = std::pow(expm, -2.);
-
-    return 2*(expm - y*(expm+1))*denominator;
-}
-
-double R20(double L, double y){
-    if(y<5e-2){
-        double y2 = y*y;
-        return (1-y2/10+y2*y2/168)/(3*L*L);
-    }
-    if(y>20){
-        return 0.;
-    }
-    double expm = expm1(y);
-    double expy = expm+1;
-    double denominator = std::pow(expm, -3.);
-
-    return 2*expy/(L*L)*(2 + y - (2-y)*expy)*denominator;
-}
-
-double R01(double L, double y){
-    double y2 = y*y;
-    if(y<5e-2){
-        return 2*L*(2-y+y2/6-y2*y2/360);
-    }
-    if(y>20){
-        return 0.;
-    }
-    double expm = expm1(y);
-    double denominator = std::pow(expm,-2.);
-
-    return 4*y2*L*(expm+1)*denominator;
-}
-
-double R11(double L, double y){
-    if(y<5e-2){
-        return -1/L*(y*2/3-y*y*y/15);
-    }
-    if(y>20){
-        return 0.;
-    }
-    double expm = expm1(y);
-    double denominator = std::pow(expm,-3.);
-    double expy = expm+1;
-
-    return -4*y/L*expy*((y-2)*expy+2+y)*denominator;
-}
-
-double R21(double L, double y){
-    if(y<5e-2){
-        double y2 = y*y;
-        return -std::pow(L,-3.)*(2-y2/5+5*y2*y2/252);
-    }
-    if(y>20){
-        return 0.;
-    }
-    double expm = expm1(y);
-    double denominator = std::pow(expm,-4);
-    double expy = expm+1;
-    double exp2y = expy*expy;
-    double y2 = y*y;
-
-    return 4*expy*std::pow(L,-3.)*(2+4*y+y2-4*(1-y2)*expy+(2-4*y+y2)*exp2y)*denominator;
-}
-
-double G(double m, double Z, double Zp, double L, double y){
-
-    return 1/(m + Z*L*L*y + Zp*R(L, y));
-}
-
-double A_der(RealVector x, double L, double zp_der){
-    if(x[0] <= 1e-12){
-        return 0;
-    }
+double A_der_hex(RealVector x, double L, double zp_der){
     double u = x[1]; //Wartości u, l i Y są tu pomnożone przez alpha2
     double l = x[2];      //Żeby uniknąć osobliwości
     double Y = (x[3]-x[4]);
@@ -109,15 +16,12 @@ double A_der(RealVector x, double L, double zp_der){
     auto integrand = [&](double y){
         return (x[4]*R01(L,y)+zp_der*R(L,y))*(
                     (3*u+2*Y*y*L2)*std::pow(G(x[1],x[3],x[4],L,y),2)
-                     +(u+2*l)*std::pow(G(x[2],x[4],x[4],L,y),2)); };
+                     +(u+4*l)*std::pow(G(x[2],x[4],x[4],L,y),2)); };
 
-    return x[5]*L2/(8*pi*x[0]*x[1])*integral(integrand);
+    return x[5]*L2/(8*M_PI*x[0]*x[1])*integral(integrand);
 }
 
-double Ms_der(RealVector x, double L, double zp_der){
-    if(x[0] <= 1e-12){
-        return 0;
-    }
+double Ms_der_hex(RealVector x, double L, double zp_der){
     double a2 = x[0]*x[0];
     double u = x[1]; //Wartości u, l i Y są tu pomnożone przez alpha2
     double l = x[2]; //Żeby uniknąć osobliwości
@@ -130,19 +34,16 @@ double Ms_der(RealVector x, double L, double zp_der){
         auto Gp = G(x[2],x[4],x[4],L,y);
 
         return (x[4]*R01(L,y)+zp_der*R(L,y))*
-                (potential*std::pow(Gs,2)+(u+2*l)*std::pow(Gp,2)
+                (potential*std::pow(Gs,2)+u*std::pow(Gp,2)
                  +std::pow(potential,2)*std::pow(Gs,3)
-                 +std::pow(u+2*l,2)*std::pow(Gp,3));
+                 +std::pow(u+4*l,2)*std::pow(Gp,3));
     };
 
-    return x[5]*L2/(4*pi*a2)*integral(integrand);
+    return x[5]*L2/(4*M_PI*a2)*integral(integrand);
 }
 
-double Mp_der(RealVector x, double L, double zp_der){
+double Mp_der_hex(RealVector x, double L, double zp_der){
 
-    /*if(x[0] <= 1e-6){
-        return 0;
-    }*/
     double a2 = x[0]*x[0];
     double u = x[1]; //Wartości u, l i Y są tu pomnożone przez alpha2
     double l = x[2];  //Żeby uniknąć osobliwości
@@ -155,18 +56,15 @@ double Mp_der(RealVector x, double L, double zp_der){
         auto Gp = G(x[2],x[4],x[4],L,y);
         double Gs2 = std::pow(Gs,2), Gp2 = std::pow(Gp,2);
 
-        return (x[4]*R01(L,y)+zp_der*R(L,y))
-                   *((1/x[1])*((2*uq+u)*Gs2+(u+2*l)*Gp2)
-                     +(6*uq+3*l)*Gs*Gp*(Gs+Gp));
+        return 2*(x[4]*R01(L,y)+zp_der*R(L,y))
+                    *((1/x[1])*((2*uq+3*u)*Gs2+(u+4*l)*Gp2)
+                      +(11*uq+14*l)*Gs*Gp*(Gs+Gp));
     };
 
-    return x[5]*L2*x[2]/(4*pi*a2)*integral(integrand);
+    return x[5]*L2*x[2]/(4*M_PI*a2)*integral(integrand);
 }
 
-double Zs_der(RealVector x, double L, double zp_der){
-    if(x[0] <= 1e-6){
-        return 0;
-    }
+double Zs_der_hex(RealVector x, double L, double zp_der){
     double a2 = x[0]*x[0];
     double u = (x[1]-x[2]); //Wartości u, l i Y są tu pomnożone przez alpha2
     double l = x[2];  //Żeby uniknąć osobliwości
@@ -178,7 +76,7 @@ double Zs_der(RealVector x, double L, double zp_der){
         double uq = u+Y*q2;
         double ps = u+2*uq;
         double ps2 = std::pow(ps,2);
-        double pp = u+2*l;
+        double pp = u+4*l;
         double pp2 = std::pow(pp,2);
 
         double r01 = x[4]*R01(L,y) + zp_der*R(L,y);
@@ -214,13 +112,10 @@ double Zs_der(RealVector x, double L, double zp_der){
                +Gp[5]*4*q2*pp2*r10*r10*r01;
     };
 
-    return x[5]*L2/(4*pi*a2)*integral(integrand);
+    return x[5]*L2/(4*M_PI*a2)*integral(integrand);
 }
 
-double Zp_der(RealVector x, double L){
-    if(x[0] <= 1e-6){
-        return 0;
-    }
+double Zp_der_hex(RealVector x, double L){
     double a2 = x[0]*x[0];
     double u = (x[1]-x[2]); //Wartości u, l i Y są tu pomnożone przez alpha2
     double l = x[2]/3;  //Żeby uniknąć osobliwości
@@ -229,7 +124,7 @@ double Zp_der(RealVector x, double L){
 
     auto Z_der = [&](double y){
         double q2 = y*L2;
-        double potential = u+2*l+Y*y*L2;
+        double potential = u+4*l+Y*y*L2;
         double p2 = std::pow(potential,2);
 
         double r00 = R(L,y);
@@ -286,8 +181,8 @@ double Zp_der(RealVector x, double L){
 
         return Z_part;
     };
-    double Z_der_integrated = x[5]*L2/(4*pi*a2)*integral(Z_der);
-    double integrated = x[5]*L2/(4*pi*a2)*integral(integrand);
+    double Z_der_integrated = x[5]*L2/(4*M_PI*a2)*integral(Z_der);
+    double integrated = x[5]*L2/(4*M_PI*a2)*integral(integrand);
     //std::cout<<L<<' '<<Z_der_integrated<<' '<<integrated<<' '<<integrated/(1-Z_der_integrated)<<std::endl;
     return integrated/(1-Z_der_integrated);
 }

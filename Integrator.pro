@@ -22,17 +22,22 @@ SOURCES += main.cpp \
     realvector.cpp \
     mainwindow.cpp \
     qcustomplot.cpp \
-    physics.cpp \
     simpson.cpp \
-    equationset.cpp
+    equationset.cpp \
+    regulator.cpp \
+    physics_cubic.cpp \
+    physics_hex.cpp
 
 HEADERS += \
     integrator.h \
     realvector.h \
     mainwindow.h \
     qcustomplot.h \
-    physics.h \
-    equationset.h
+    equationset.h \
+    regulator.h \
+    physics_cubic.h \
+    physics_hex.h \
+    simpson.h
 
 QMAKE_CXXFLAGS += -std=c++14
 

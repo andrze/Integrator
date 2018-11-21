@@ -10,7 +10,7 @@
 #include "ui_mainwindow.h"
 #include "integrator.h"
 #include "realvector.h"
-#include "physics.h"
+#include "physics_cubic.h"
 #include <iostream>
 #include <limits>
 
@@ -87,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
     plots = std::vector<QCustomPlot*>{ui->alphaPlot, ui->msPlot, ui->mpPlot, ui->zPlot, ui->universalPlot,
                 ui->uPlot, ui->tauPlot, ui->yPlot, ui->stiffPlot, ui->etaPlot,};
 
-    EquationSet equations;
+    EquationSet equations(ui->cubicRadioButton->isChecked());
     integrator = Integrator(equations);
     ui->tsenseBox->valueChanged(ui->tsenseBox->value());
     this->reset_xAxis();
@@ -201,9 +201,11 @@ void MainWindow::on_xMaxSpinBox_valueChanged(double){
 void MainWindow::on_cubicRadioButton_clicked(){
     ui->hexRadioButton->setChecked(false);
     ui->cubicRadioButton->setChecked(true);
+    integrator = Integrator(EquationSet(ui->cubicRadioButton->isChecked()));
 }
 
 void MainWindow::on_hexRadioButton_clicked(){
     ui->hexRadioButton->setChecked(true);
     ui->cubicRadioButton->setChecked(false);
+    integrator = Integrator(EquationSet(ui->cubicRadioButton->isChecked()));
 }
