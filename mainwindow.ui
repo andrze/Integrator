@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>988</width>
+    <width>1169</width>
     <height>572</height>
    </rect>
   </property>
@@ -145,8 +145,8 @@
    <widget class="QLabel" name="label_11">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>70</y>
+      <x>489</x>
+      <y>10</y>
       <width>61</width>
       <height>26</height>
      </rect>
@@ -158,8 +158,8 @@
    <widget class="QDoubleSpinBox" name="tauBox">
     <property name="geometry">
      <rect>
-      <x>101</x>
-      <y>70</y>
+      <x>550</x>
+      <y>10</y>
       <width>91</width>
       <height>26</height>
      </rect>
@@ -186,7 +186,7 @@
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>91</width>
+      <width>71</width>
       <height>27</height>
      </rect>
     </property>
@@ -200,7 +200,7 @@
    <widget class="QDoubleSpinBox" name="startTimeBox">
     <property name="geometry">
      <rect>
-      <x>110</x>
+      <x>90</x>
       <y>10</y>
       <width>81</width>
       <height>26</height>
@@ -222,7 +222,7 @@
    <widget class="QLabel" name="label_5">
     <property name="geometry">
      <rect>
-      <x>220</x>
+      <x>190</x>
       <y>10</y>
       <width>61</width>
       <height>27</height>
@@ -235,7 +235,7 @@
    <widget class="QDoubleSpinBox" name="endTimeBox">
     <property name="geometry">
      <rect>
-      <x>310</x>
+      <x>260</x>
       <y>10</y>
       <width>71</width>
       <height>26</height>
@@ -248,16 +248,16 @@
      <double>-10.000000000000000</double>
     </property>
     <property name="maximum">
-     <double>50.000000000000000</double>
+     <double>1000.000000000000000</double>
     </property>
     <property name="value">
-     <double>10.000000000000000</double>
+     <double>20.000000000000000</double>
     </property>
    </widget>
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>410</x>
+      <x>340</x>
       <y>10</y>
       <width>51</width>
       <height>27</height>
@@ -273,9 +273,9 @@
    <widget class="QDoubleSpinBox" name="deltaTBox">
     <property name="geometry">
      <rect>
-      <x>490</x>
+      <x>400</x>
       <y>10</y>
-      <width>81</width>
+      <width>71</width>
       <height>26</height>
      </rect>
     </property>
@@ -292,14 +292,14 @@
      <double>0.010000000000000</double>
     </property>
     <property name="value">
-     <double>-0.030000000000000</double>
+     <double>-0.010000000000000</double>
     </property>
    </widget>
    <widget class="QSpinBox" name="tsenseBox">
     <property name="geometry">
      <rect>
-      <x>340</x>
-      <y>70</y>
+      <x>759</x>
+      <y>10</y>
       <width>41</width>
       <height>21</height>
      </rect>
@@ -320,8 +320,8 @@
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>70</y>
+      <x>659</x>
+      <y>10</y>
       <width>71</width>
       <height>21</height>
      </rect>
@@ -463,12 +463,12 @@
      <rect>
       <x>520</x>
       <y>510</y>
-      <width>89</width>
+      <width>101</width>
       <height>25</height>
      </rect>
     </property>
     <property name="text">
-     <string>Find FP</string>
+     <string>Szukaj TC</string>
     </property>
    </widget>
    <widget class="QCustomPlot" name="universalPlot" native="true">
@@ -526,9 +526,9 @@
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>600</x>
-      <y>10</y>
-      <width>181</width>
+      <x>950</x>
+      <y>510</y>
+      <width>91</width>
       <height>25</height>
      </rect>
     </property>
@@ -539,9 +539,9 @@
    <widget class="QLabel" name="label_27">
     <property name="geometry">
      <rect>
-      <x>790</x>
-      <y>10</y>
-      <width>67</width>
+      <x>350</x>
+      <y>40</y>
+      <width>31</width>
       <height>21</height>
      </rect>
     </property>
@@ -552,14 +552,17 @@
    <widget class="QDoubleSpinBox" name="TSpinBox">
     <property name="geometry">
      <rect>
-      <x>840</x>
-      <y>10</y>
+      <x>400</x>
+      <y>40</y>
       <width>71</width>
       <height>26</height>
      </rect>
     </property>
+    <property name="decimals">
+     <number>10</number>
+    </property>
     <property name="singleStep">
-     <double>0.050000000000000</double>
+     <double>0.001000000000000</double>
     </property>
     <property name="value">
      <double>0.200000000000000</double>
@@ -568,7 +571,7 @@
    <widget class="QPushButton" name="clearButton">
     <property name="geometry">
      <rect>
-      <x>620</x>
+      <x>630</x>
       <y>510</y>
       <width>131</width>
       <height>32</height>
@@ -581,7 +584,7 @@
    <widget class="QLabel" name="label_28">
     <property name="geometry">
      <rect>
-      <x>40</x>
+      <x>20</x>
       <y>40</y>
       <width>59</width>
       <height>21</height>
@@ -594,7 +597,7 @@
    <widget class="QLabel" name="label_29">
     <property name="geometry">
      <rect>
-      <x>220</x>
+      <x>190</x>
       <y>40</y>
       <width>59</width>
       <height>21</height>
@@ -607,7 +610,7 @@
    <widget class="QDoubleSpinBox" name="xMinSpinBox">
     <property name="geometry">
      <rect>
-      <x>110</x>
+      <x>90</x>
       <y>40</y>
       <width>81</width>
       <height>26</height>
@@ -626,7 +629,7 @@
    <widget class="QDoubleSpinBox" name="xMaxSpinBox">
     <property name="geometry">
      <rect>
-      <x>310</x>
+      <x>260</x>
       <y>40</y>
       <width>71</width>
       <height>26</height>
@@ -639,36 +642,230 @@
      <double>1.000000000000000</double>
     </property>
     <property name="value">
-     <double>10.000000000000000</double>
+     <double>20.000000000000000</double>
     </property>
    </widget>
-   <widget class="QRadioButton" name="cubicRadioButton">
+   <widget class="QLabel" name="label_22">
     <property name="geometry">
      <rect>
-      <x>410</x>
+      <x>980</x>
+      <y>100</y>
+      <width>191</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>eta(alpha^2)</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QCustomPlot" name="uAlphaPlot" native="true">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>320</y>
+      <width>181</width>
+      <height>181</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_23">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>300</y>
+      <width>181</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>u(alpha^2)</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QCustomPlot" name="etaAlphaPlot" native="true">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>120</y>
+      <width>181</width>
+      <height>181</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="orderedRadioButton">
+    <property name="geometry">
+     <rect>
+      <x>670</x>
       <y>70</y>
-      <width>171</width>
+      <width>221</width>
       <height>20</height>
      </rect>
     </property>
     <property name="text">
-     <string>Cubic anisotropy</string>
+     <string>Granica fazy uporządkowanej</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="unorderedRadioButton">
+    <property name="geometry">
+     <rect>
+      <x>670</x>
+      <y>40</y>
+      <width>221</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Granica fazy nieuporządkowanej</string>
     </property>
     <property name="checked">
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QRadioButton" name="hexRadioButton">
+   <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>610</x>
-      <y>70</y>
+      <x>489</x>
+      <y>39</y>
       <width>161</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QRadioButton" name="cubicRadioButton">
+       <property name="text">
+        <string>Cubic anisotropy</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="hexRadioButton">
+       <property name="text">
+        <string>Hexagonal anisotropy</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QDoubleSpinBox" name="criticalLineSpinBox">
+    <property name="geometry">
+     <rect>
+      <x>1071</x>
+      <y>40</y>
+      <width>71</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="decimals">
+     <number>9</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>930</x>
+      <y>40</y>
+      <width>141</width>
       <height>20</height>
      </rect>
     </property>
     <property name="text">
-     <string>Hexagonal anisotropy</string>
+     <string>Koniec linii krytycznej</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>930</x>
+      <y>70</y>
+      <width>121</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Liczba punktów</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="criticalNumberBox">
+    <property name="geometry">
+     <rect>
+      <x>1070</x>
+      <y>70</y>
+      <width>71</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>999999</number>
+    </property>
+    <property name="value">
+     <number>10</number>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="CLButton">
+    <property name="geometry">
+     <rect>
+      <x>770</x>
+      <y>510</y>
+      <width>171</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Szukaj Linii Krytycznej</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="stopButton">
+    <property name="geometry">
+     <rect>
+      <x>1050</x>
+      <y>510</y>
+      <width>114</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Zatrzymaj</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="uBox">
+    <property name="geometry">
+     <rect>
+      <x>850</x>
+      <y>10</y>
+      <width>91</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="decimals">
+     <number>10</number>
+    </property>
+    <property name="singleStep">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="value">
+     <double>1.000000000000000</double>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_12">
+    <property name="geometry">
+     <rect>
+      <x>820</x>
+      <y>10</y>
+      <width>31</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>U</string>
     </property>
    </widget>
   </widget>

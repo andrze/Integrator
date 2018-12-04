@@ -6,6 +6,30 @@
 #include <iomanip>
 #include <iostream>
 
+
+int phase_diagnosis(std::vector<Plot> result){
+    if(result[0].vals.back() > 1e-03){
+        double eta = -exp(-result[4].times.back())*result[4].derivatives.back()/result[4].vals.back();
+        if(std::abs(eta) < 1e-04){
+            return 2;
+        }
+    }
+
+    for(size_t i=0; i<result[0].vals.size(); i++){
+        double k = result[0].vals[i]*result[0].vals[i]*result[4].vals[i];
+        if(k > 0.035 && k < 0.05){
+            double eta = -exp(-result[4].times[i])*result[4].derivatives[i]/result[4].vals[i];
+
+            if(eta > 0.26){
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+
 Integrator::Integrator()
 {
 
@@ -28,6 +52,14 @@ void push_ders(std::vector<Plot>* plots, RealVector ders){
     }
 }
 
+void pop_point(std::vector<Plot>& plots){
+    for(auto it=plots.begin(); it != plots.end(); it++){
+        it->vals.pop_back();
+        it->times.pop_back();
+        it->derivatives.pop_back();
+    }
+}
+
 std::vector<Plot > Integrator::integrate(double start_t, double end_t, double delta_t,
                                          RealVector starting_point){
 
@@ -47,43 +79,83 @@ std::vector<Plot > Integrator::integrate(double start_t, double end_t, double de
     }
 
     push_point(&plots, point, t);
-
+    //int contractions = 3;
     int n_steps=0;
     while(t>end_t){
-        if(n_steps%100 == 0){
+        if(n_steps%500 == 0){
             std::cout<<-log(t)<<std::endl;
         }
+
         t = old_t*jump;
         double h = t-old_t;
-        old_t = t;
 
-        point = this->rk4(point, h, t, &plots);
+        RealVector new_point = this->rk4(point, h, t, &plots, true);
+
 
         for(size_t j=0; j<point.coords.size(); j++){
             if(point[j]<0.){
                 if(j!=2){
+                    for(int i=0; i<-2/(10*delta_t); i++){
+                        pop_point(plots);
+                    }
+                    std::cout<<"Zakończono w punkcie "<<point<<" na wartości "<<j<<".\n";
                     return plots;
                 } else {
-                    point[j] = 0.;
+                    //point[j] = 0.;
                 }
             }
         }
+        /*bool break_for_loop = false;
+        for(size_t j=0; j<point.coords.size(); j++){
+            if(std::abs(plots[j].derivatives.back()*h) > 5e-3){
+                std::cout<<'c';
+                if(contractions == 0){
+                    std::cout<<"out"<<plots[j].derivatives.size();
+                    for(int i=0; i<-10; i++){
+                        pop_point(plots);
+                    }
+                    std::cout<<"out"<<plots[j].derivatives.size();
+                    return plots;
+                }
+                jump = std::sqrt(jump);
 
-        push_point(&plots, point, t);
+                t = old_t*jump;
+                h = t-old_t;
+                contractions--;
+
+                new_point = this->rk4(point, h, t, &plots, false);
+                break_for_loop = true;
+            }
+            if(break_for_loop){
+                break;
+            }
+        }*/
+
+        old_t = t;
+
+        push_point(&plots, new_point, t);
+        point = new_point;
         n_steps++;
+
+        if(t<0.1 && n_steps % 10 == 0 && phase_diagnosis(plots) > 0){
+            break;
+        }
     }
 
     push_ders(&plots, equations.evaluate(point, t));
     return plots;
 }
 
-RealVector Integrator::rk4(RealVector point, double delta_t, double t, std::vector<Plot> *plots){
+RealVector Integrator::rk4(RealVector point, double delta_t, double t, std::vector<Plot> *plots, bool add_ders=true){
 
     RealVector first=point, second, third, fourth, final;
     RealVector first_eval, second_eval, third_eval;
 
     first_eval = equations.evaluate(point, t);
-    push_ders(plots, first_eval);
+
+    if(add_ders){
+        push_ders(plots, first_eval);
+    }
 
     second = first + delta_t/2*first_eval;
     second_eval = equations.evaluate(second, t+delta_t/2);

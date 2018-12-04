@@ -66,7 +66,7 @@ double Mp_der_hex(RealVector x, double L, double zp_der){
 
 double Zs_der_hex(RealVector x, double L, double zp_der){
     double a2 = x[0]*x[0];
-    double u = (x[1]-x[2]); //Wartości u, l i Y są tu pomnożone przez alpha2
+    double u = x[1]; //Wartości u, l i Y są tu pomnożone przez alpha2
     double l = x[2];  //Żeby uniknąć osobliwości
     double Y = (x[3]-x[4]);
     double L2 = L*L;
@@ -117,7 +117,7 @@ double Zs_der_hex(RealVector x, double L, double zp_der){
 
 double Zp_der_hex(RealVector x, double L){
     double a2 = x[0]*x[0];
-    double u = (x[1]-x[2]); //Wartości u, l i Y są tu pomnożone przez alpha2
+    double u = x[1]; //Wartości u, l i Y są tu pomnożone przez alpha2
     double l = x[2]/3;  //Żeby uniknąć osobliwości
     double Y = (x[3]-x[4]);
     double L2 = L*L;

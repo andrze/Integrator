@@ -14,6 +14,8 @@ struct Plot
 
 std::ostream& operator << (std::ostream& out, Plot p);
 
+int phase_diagnosis(std::vector<Plot> result);
+
 class Integrator
 {
 public:
@@ -25,7 +27,7 @@ public:
     EquationSet equations;
 
 private:
-    RealVector rk4(RealVector point, double delta_t, double t, std::vector<Plot> *plots);
+    RealVector rk4(RealVector point, double delta_t, double t, std::vector<Plot> *plots, bool add_ders);
 
 };
 
