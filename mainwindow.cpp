@@ -98,11 +98,11 @@ MainWindow::MainWindow(QWidget *parent) :
     plots = std::vector<QCustomPlot*>{ui->alphaPlot, ui->msPlot, ui->mpPlot, ui->zPlot, ui->universalPlot,
                 ui->uPlot, ui->tauPlot, ui->yPlot, ui->stiffPlot, ui->etaPlot,};
 
-    EquationSet equations(ui->cubicRadioButton->isChecked());
+    EquationSet equations(ui->cubicRadioButton->isChecked(), ui->dimensionBox->value());
     integrator = Integrator(equations);
     ui->tsenseBox->valueChanged(ui->tsenseBox->value());
     this->reset_xAxis();
-    connect(this, SIGNAL(calculated(std::vector<Plot>*)), this, SLOT(plot_result(std::vector<Plot>*)));
+    connect(this, SIGNAL(calculated(PlotSet*)), this, SLOT(plot_result(PlotSet*)));
 }
 
 MainWindow::~MainWindow()
@@ -110,7 +110,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-std::vector<Plot> MainWindow::integrate(){
+std::pair<PlotSet, int> MainWindow::integrate(){
     std::vector<double> coords({1,
                                 ui->uBox->value(), ui->tauBox->value(),
                                 1, 1,
@@ -123,7 +123,7 @@ std::vector<Plot> MainWindow::integrate(){
                                 start);
 }
 
-std::vector<Plot> MainWindow::integrate(RealVector start_point){
+std::pair<PlotSet, int> MainWindow::integrate(RealVector start_point){
 
     return integrator.integrate(exp(-ui->startTimeBox->value()),
                                 exp(-ui->endTimeBox->value()),
@@ -171,15 +171,15 @@ void MainWindow::on_saveButton_clicked(){
 
     for(size_t k=0; k<max_length; k++){
         for(size_t i=0; i<results.size(); i++){
-            if(k < results[i][0].times.size()){
+            if(k < results[i].plot_size()){
                 file << results[i][0].times[k] << ',';
-                for(size_t j=0; j<results[0].size(); j++){
+                for(size_t j=0; j<results[i].plot_number(); j++){
 
-                    file << results[i][j].vals[k] << ',';
+                    file << results[i][j].values[k] << ',';
                 }
-                file << (-exp(-results[i][0].times[k])*results[i][4].derivatives[k]/results[i][4].vals[k])<< ',';
+                file << (-exp(-results[i][4].times[k])*results[i][4].derivatives[k]/results[i][4].values[k])<< ',';
             } else {
-                for(size_t j=0; j<results[0].size()+2; j++){
+                for(size_t j=0; j<results[i].plot_number()+2; j++){
                     file << ',';
                 }
             }
@@ -198,17 +198,17 @@ void MainWindow::on_tsenseBox_valueChanged(int arg1){
 void MainWindow::on_pushButton_clicked(){
 
     auto func = [=](){
-        std::vector<Plot>* last_el;
-        std::vector<Plot> p = integrate();
+        PlotSet* last_el;
+        auto p = integrate();
         {
             std::lock_guard<std::mutex> guard(this->data_mutex);
-            results.push_back(p);
+            results.push_back(p.first);
             last_el = &results.back();
         }
 
         std::string phase;
 
-        int diag = phase_diagnosis(p);
+        int diag = p.second;
         if(diag == 2){
             phase = "Uporządkowana";
         } else if(diag == 1){
@@ -228,35 +228,39 @@ void MainWindow::on_pushButton_clicked(){
 
 }
 
-void MainWindow::plot_result(std::vector<Plot>* res){
+void MainWindow::plot_result(PlotSet *res){
     auto p = *res;
     std::array<std::vector<double>, 7> plot_vals;
+    std::vector<double> time;
+    for(auto t: p[0].times){
+        time.push_back(-log(t));
+    }
 
-    addGraph(ui->alphaPlot, p[0].times, p[0].vals, true);
+    addGraph(ui->alphaPlot, time, p[0].values, true);
 
-    addGraph(ui->msPlot, p[1].times, p[1].vals, true);
+    addGraph(ui->msPlot, time, p[1].values, true);
 
-    addGraph(ui->mpPlot, p[2].times, p[2].vals, true);
+    addGraph(ui->mpPlot, time, p[2].values, true);
 
-    addGraph(ui->zPlot, p[3].times, p[3].vals, true, 2);
-    addGraph(ui->zPlot, p[4].times, p[4].vals, true, 2);
+    addGraph(ui->zPlot, time, p[3].values, true, 2);
+    addGraph(ui->zPlot, time, p[4].values, true, 2);
 
 
-    for(size_t i=0; i<p[0].vals.size(); i++){
-        double a2 = std::pow(p[0].vals[i],2);
-        plot_vals[0].push_back(p[1].vals[i]/a2);
-        plot_vals[1].push_back(p[2].vals[i]/a2);
-        plot_vals[2].push_back((p[3].vals[i]-p[4].vals[i])/a2);
-        plot_vals[3].push_back(a2*p[4].vals[i]);
-        plot_vals[4].push_back(-exp(-p[4].times[i])*p[4].derivatives[i]/p[4].vals[i]);
-        plot_vals[5].push_back(-exp(-p[4].times[i])*p[4].derivatives[i]*a2/p[5].vals[i]);
-        plot_vals[6].push_back(p[1].vals[i]/a2*exp(2*p[4].times[i])/std::pow(p[3].vals[i],2));
+    for(size_t i=0; i<p[0].values.size(); i++){
+        double a2 = std::pow(p[0].values[i],2);
+        plot_vals[0].push_back(p[1].values[i]/a2);
+        plot_vals[1].push_back(p[2].values[i]/a2);
+        plot_vals[2].push_back((p[3].values[i]-p[4].values[i])/a2);
+        plot_vals[3].push_back(a2*p[4].values[i]);
+        plot_vals[4].push_back(-p[4].times[i]*p[4].derivatives[i]/p[4].values[i]);
+        plot_vals[5].push_back(-p[4].times[i]*p[4].derivatives[i]*a2/p[5].values[i]);
+        plot_vals[6].push_back(p[1].values[i]/a2*exp(2*p[4].times[i])/std::pow(p[3].values[i],2));
     }
 
     std::vector<QCustomPlot*> composite_plots{ui->uPlot, ui->tauPlot, ui->yPlot, ui->stiffPlot, ui->etaPlot, ui->universalPlot};
     for(size_t i=0; i<composite_plots.size(); i++){
         composite_plots[i]->yAxis->setScaleType(QCPAxis::stLinear);
-        addGraph(composite_plots[i], p[0].times, plot_vals[i]);
+        addGraph(composite_plots[i], time, plot_vals[i]);
     }
 
     //auto max = std::max_element(plot_vals[3].begin(), plot_vals[3].end());
@@ -266,6 +270,7 @@ void MainWindow::plot_result(std::vector<Plot>* res){
     addGraph(ui->etaAlphaPlot, plot_vals[3], plot_vals[4]);
     addGraph(ui->uAlphaPlot, plot_vals[3], plot_vals[6], true);
 
+    std::cout<<"\a"<<std::flush;
 }
 
 void MainWindow::on_clearButton_clicked()
@@ -298,12 +303,17 @@ void MainWindow::on_xMaxSpinBox_valueChanged(double){
     reset_xAxis();
 }
 
+void MainWindow::restart_integrator(){
+    EquationSet equations(ui->cubicRadioButton->isChecked(), ui->dimensionBox->value());
+    integrator = Integrator(equations);
+}
+
 void MainWindow::on_cubicRadioButton_clicked(){
-    integrator = Integrator(EquationSet(ui->cubicRadioButton->isChecked()));
+    restart_integrator();
 }
 
 void MainWindow::on_hexRadioButton_clicked(){
-    integrator = Integrator(EquationSet(ui->cubicRadioButton->isChecked()));
+    restart_integrator();
 }
 
 void MainWindow::on_fpButton_clicked(){
@@ -318,7 +328,7 @@ void MainWindow::on_fpButton_clicked(){
         auto p = this->integrate();
 
         bool go_to_lower;
-        int phase = phase_diagnosis(p);
+        int phase = p.second;
         if(ui->orderedRadioButton->isChecked()){
             go_to_lower = (phase <= 1);
         } else {
@@ -328,15 +338,22 @@ void MainWindow::on_fpButton_clicked(){
         if(go_to_lower){
             upper = T;
             T -= diff;
+            if(T > 4.1*diff){
+                diff *=2;
+            }
+            while(T <= diff){
+                diff /= 2;
+            }
         } else {
             lower = T;
             T += diff;
+            diff *= 2;
         }
         ui->TSpinBox->setValue(T);
 
         std::cout<<ui->TSpinBox->value()<<std::endl;
     }
-    double precision = 1e-6;
+    double precision = std::pow(10,-ui->tsenseBox->value());
 
     ui->TSpinBox->setValue((upper+lower)/2);
 
@@ -349,7 +366,7 @@ void MainWindow::on_fpButton_clicked(){
         auto p = this->integrate();
 
         bool go_to_lower;
-        int phase = phase_diagnosis(p);
+        int phase = p.second;
         if(ui->orderedRadioButton->isChecked()){
             go_to_lower = (phase <= 1);
         } else {
@@ -366,6 +383,7 @@ void MainWindow::on_fpButton_clicked(){
         i++;
     }
 
+    std::cout<<"\a"<<std::flush;
 }
 
 
@@ -376,11 +394,13 @@ double MainWindow::find_fp(RealVector start_point){
 
     double lower = -1;
     double upper = -1;
+    size_t steps = 0;
     while(lower < 0 || upper < 0){
         auto p = this->integrate(start_point);
 
+        int phase = p.second;
+
         bool go_to_lower;
-        int phase = phase_diagnosis(p);
         if(ui->orderedRadioButton->isChecked()){
             go_to_lower = (phase <= 1);
         } else {
@@ -395,21 +415,25 @@ double MainWindow::find_fp(RealVector start_point){
             start_point[5] += diff;
         }
 
-        std::cout<<start_point[5]<<std::endl;
+        std::cout<<"T: "<<start_point[5]<<" L: "<<start_point[2]<<std::endl;
+        steps++;
+        if(steps>50){
+            return std::numeric_limits<double>::quiet_NaN();
+        }
     }
-    double precision = 1e-7;
+    double precision = 1e-8;
 
     start_point[5] = (upper+lower)/2;
 
     int i=0;
     while(std::abs(lower-upper) > precision){
 
-        std::cout<<i<<": "<<start_point[5]<<' '<<lower<<' '<<upper<<std::endl;
+        std::cout<<i<<" T: "<<start_point[5]<<" L: "<<start_point[2]<<std::endl;
 
         auto p = this->integrate(start_point);
 
         bool go_to_lower;
-        int phase = phase_diagnosis(p);
+        int phase = p.second;
         if(ui->orderedRadioButton->isChecked()){
             go_to_lower = (phase <= 1);
         } else {
@@ -435,24 +459,33 @@ void MainWindow::on_CLButton_clicked()
     size_t steps = size_t(ui->criticalNumberBox->value())+1;
     RealVector start_point{std::vector<double>{1,ui->uBox->value(),0,1,1,ui->TSpinBox->value()}};
 
+    bool logarithmic = ui->hexRadioButton->isChecked();
+
     if(end <= 0. || start <= 0.){
         return;
     }
     size_t threads = 4;
 
     std::vector<double> points;
+
     for(size_t i=0; i<steps; i++){
-        points.push_back(std::pow(end/start,double(i)/(steps-1)) * start);
+        if(logarithmic){
+            points.push_back(std::pow(end/start,double(i)/(steps-1)) * start);
+        } else {
+            points.push_back((end-start)*double(i)/(steps-1)+start);
+        }
     }
 
     auto func = [=](size_t first, size_t last, std::atomic<bool>* stop_ptr, std::promise<std::vector<std::pair<double,double> > > promises){
         std::vector<std::pair<double,double> > temperatures;
+        double T = start_point.coords[5];
         for(size_t i=first; i<last; i++){
             double lambda = points[i];
             RealVector point = start_point;
             point[2] = lambda;
+            point[5] = T;
             double T = this->find_fp(point);
-            std::cout<<"Punkt "<<i<<", Lambda: "<< lambda<<", Temparatura :"<<T<<std::endl;
+            std::cout<<"Punkt "<<i<<", Lambda: "<< lambda<<", Temperatura :"<<T<<std::endl;
             temperatures.push_back(std::make_pair(T, lambda));
             if(*stop_ptr){
                 *stop_ptr = false;
@@ -494,4 +527,9 @@ void MainWindow::on_CLButton_clicked()
 
 void MainWindow::on_stopButton_clicked(){
     this->stop = true;
+}
+
+void MainWindow::on_dimensionBox_valueChanged(double)
+{
+    restart_integrator();
 }

@@ -2,15 +2,16 @@
 #define EQUATIONSET_H
 #include <vector>
 #include "realvector.h"
-#include "functional"
 
 
 class EquationSet
 {
 public:
-    EquationSet(bool cubic=true);
+    EquationSet(bool cubic=true, double dimension=2);
 
     bool cubic;
+    double d;
+    double d_factor;
 
     RealVector evaluate(RealVector point, double L);
 };

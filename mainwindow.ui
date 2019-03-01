@@ -216,7 +216,7 @@
      <double>20.000000000000000</double>
     </property>
     <property name="value">
-     <double>-5.000000000000000</double>
+     <double>0.000000000000000</double>
     </property>
    </widget>
    <widget class="QLabel" name="label_5">
@@ -251,7 +251,7 @@
      <double>1000.000000000000000</double>
     </property>
     <property name="value">
-     <double>20.000000000000000</double>
+     <double>50.000000000000000</double>
     </property>
    </widget>
    <widget class="QLabel" name="label_6">
@@ -559,13 +559,16 @@
      </rect>
     </property>
     <property name="decimals">
-     <number>10</number>
+     <number>15</number>
+    </property>
+    <property name="maximum">
+     <double>999.990000000000009</double>
     </property>
     <property name="singleStep">
      <double>0.001000000000000</double>
     </property>
     <property name="value">
-     <double>0.200000000000000</double>
+     <double>0.600000000000000</double>
     </property>
    </widget>
    <widget class="QPushButton" name="clearButton">
@@ -623,7 +626,7 @@
      <double>1.000000000000000</double>
     </property>
     <property name="value">
-     <double>-5.000000000000000</double>
+     <double>0.000000000000000</double>
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="xMaxSpinBox">
@@ -731,8 +734,8 @@
      <rect>
       <x>489</x>
       <y>39</y>
-      <width>161</width>
-      <height>51</height>
+      <width>177</width>
+      <height>54</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -866,6 +869,44 @@
     </property>
     <property name="text">
      <string>U</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="dimensionBox">
+    <property name="geometry">
+     <rect>
+      <x>990</x>
+      <y>10</y>
+      <width>91</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
+    <property name="minimum">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>4.000000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.100000000000000</double>
+    </property>
+    <property name="value">
+     <double>2.000000000000000</double>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_24">
+    <property name="geometry">
+     <rect>
+      <x>960</x>
+      <y>10</y>
+      <width>31</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>d</string>
     </property>
    </widget>
   </widget>

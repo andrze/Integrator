@@ -24,9 +24,9 @@ private:
     Integrator integrator;
     //std::unique_ptr<std::thread> worker;
 
-    std::vector<Plot> integrate();
-    std::vector<Plot> integrate(RealVector start_point);
-    std::vector<std::vector<Plot> > results;
+    std::pair<PlotSet,int> integrate();
+    std::pair<PlotSet,int> integrate(RealVector start_point);
+    std::vector<PlotSet > results;
     void reset_xAxis();
     std::vector<QCustomPlot*> plots;
     //std::vector<std::pair<double,double> > critical_line;
@@ -36,13 +36,14 @@ private:
     double find_fp(RealVector start_point);
 
     void plot_result(std::vector<Plot> p);
+    void restart_integrator();
 
 signals:
-    void calculated(std::vector<Plot>* res);
+    void calculated(PlotSet* res);
 
 private slots:
 
-    void plot_result(std::vector<Plot>* res);
+    void plot_result(PlotSet* res);
     void on_fileButton_clicked();
     void on_saveButton_clicked();
     void on_tsenseBox_valueChanged(int arg1);
@@ -55,6 +56,7 @@ private slots:
     void on_fpButton_clicked();
     void on_CLButton_clicked();
     void on_stopButton_clicked();
+    void on_dimensionBox_valueChanged(double arg1);
 };
 
 #endif // MAINWINDOW_H
