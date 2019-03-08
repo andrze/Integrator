@@ -33,11 +33,11 @@ void addGraph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double> 
         }
     }
 
-    int graph_num = plot->graphCount();
+    int graph_num = plot->plottableCount();
     int limit = 6*parts;
     if(graph_num >= 2*limit){
         for(int i=1; i<=limit; i++){
-            plot->removeGraph(graph_num-i);
+            plot->removePlottable(graph_num-i);
         }
         graph_num -= limit;
     }
@@ -46,14 +46,17 @@ void addGraph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double> 
         graph_num -= limit;
     }
 
-    plot->addGraph();
-    plot->graph(graph_num)->setPen(color[size_t(graph_num/parts)]);
+    QCPCurve* curve = new QCPCurve(plot->xAxis, plot->yAxis);
+
+    auto pen = color[size_t(graph_num/parts)];
+    pen.setStyle(Qt::SolidLine);
+    curve->setPen(pen);
     if(parts>1 && graph_num%2 == 0){
-        auto pen = plot->graph(graph_num)->pen();
+        auto pen = curve->pen();
         pen.setStyle(Qt::DotLine);
-        plot->graph(graph_num)->setPen(pen);
+        curve->setPen(pen);
     }
-    plot->graph(graph_num)->setData(x,y);
+    curve->setData(x,y);
 
     auto yrange = plot->yAxis->range();
     auto max = *std::max_element(vals.begin(), vals.end());
@@ -76,14 +79,14 @@ void addGraph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double> 
         plot->yAxis->setTicker(logTicker);
 
         if(max <= 0){
-            plot->yAxis->setRange(0,5);
+            plot->yAxis->setRange(1e-10,10);
         } else {
             double diff = max / min;
             if(diff <= 1.){
                 diff = exp(5.);
             }
             diff = std::pow(diff, 0.1);
-            plot->yAxis->setRange(std::min(min/diff, yrange.lower), std::max(max*diff, yrange.upper));
+            plot->yAxis->setRange(std::min(std::abs(min/diff), std::abs(yrange.lower)), std::max(max*diff, yrange.upper));
         }
     }
     plot->replot();
@@ -95,8 +98,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    plots = std::vector<QCustomPlot*>{ui->alphaPlot, ui->msPlot, ui->mpPlot, ui->zPlot, ui->universalPlot,
-                ui->uPlot, ui->tauPlot, ui->yPlot, ui->stiffPlot, ui->etaPlot,};
+    plots = std::vector<QCustomPlot*>{ui->alphaPlot, ui->mPlot, ui->kappaPlot, ui->zPlot, ui->universalPlot,
+                ui->uPlot, ui->yPlot, ui->m2Plot, ui->etaPlot,};
 
     EquationSet equations(ui->cubicRadioButton->isChecked(), ui->dimensionBox->value());
     integrator = Integrator(equations);
@@ -199,6 +202,7 @@ void MainWindow::on_pushButton_clicked(){
 
     auto func = [=](){
         PlotSet* last_el;
+        ui->dimensionBox->setEnabled(false);
         auto p = integrate();
         {
             std::lock_guard<std::mutex> guard(this->data_mutex);
@@ -220,6 +224,8 @@ void MainWindow::on_pushButton_clicked(){
 
         std::cout<<"Obliczono, końcowa faza: " << phase <<std::endl;
         emit calculated(last_el);
+
+        ui->dimensionBox->setEnabled(true);
     };
 
     std::thread t(func);
@@ -230,45 +236,89 @@ void MainWindow::on_pushButton_clicked(){
 
 void MainWindow::plot_result(PlotSet *res){
     auto p = *res;
-    std::array<std::vector<double>, 7> plot_vals;
-    std::vector<double> time;
+    std::array<std::vector<double>, 9> plot_vals;
+    std::vector<double> time, log_time;
     for(auto t: p[0].times){
-        time.push_back(-log(t));
+        time.push_back(t);
+        log_time.push_back(-log(t));
     }
+    double d = ui->dimensionBox->value();
 
-    addGraph(ui->alphaPlot, time, p[0].values, true);
-
-    addGraph(ui->msPlot, time, p[1].values, true);
-
-    addGraph(ui->mpPlot, time, p[2].values, true);
-
-    addGraph(ui->zPlot, time, p[3].values, true, 2);
-    addGraph(ui->zPlot, time, p[4].values, true, 2);
+    if(p[2].values[0] != 0){
+        addGraph(ui->mPlot, log_time, p[1].values, true, 2);
+        addGraph(ui->mPlot, log_time, p[2].values, true, 2);
+    } else {
+        addGraph(ui->mPlot, log_time, p[1].values, true, 1);
+    }
+    addGraph(ui->zPlot, log_time, p[3].values, true, 2);
+    addGraph(ui->zPlot, log_time, p[4].values, true, 2);
 
 
     for(size_t i=0; i<p[0].values.size(); i++){
+        double pow_time = 1;
+        if(d!=2){
+            pow_time = std::pow(time[i],(2-d)/2);
+        }
         double a2 = std::pow(p[0].values[i],2);
-        plot_vals[0].push_back(p[1].values[i]/a2);
-        plot_vals[1].push_back(p[2].values[i]/a2);
-        plot_vals[2].push_back((p[3].values[i]-p[4].values[i])/a2);
-        plot_vals[3].push_back(a2*p[4].values[i]);
-        plot_vals[4].push_back(-p[4].times[i]*p[4].derivatives[i]/p[4].values[i]);
-        plot_vals[5].push_back(-p[4].times[i]*p[4].derivatives[i]*a2/p[5].values[i]);
-        plot_vals[6].push_back(p[1].values[i]/a2*exp(2*p[4].times[i])/std::pow(p[3].values[i],2));
+        double kappa = a2*p[4].values[i]*pow_time*pow_time;
+        plot_vals[0].push_back((p[3].values[i]-p[4].values[i])/kappa);
+        plot_vals[1].push_back(kappa);
+        plot_vals[2].push_back(p.eta(i));
+        plot_vals[3].push_back(p.eta(i)*kappa/p[5].values[i]);
+        plot_vals[4].push_back(a2);
+        plot_vals[5].push_back(p[1].values[i]/a2 * std::pow(time[i], d-4) * std::pow(p[4].values[i],-2));
+        plot_vals[6].push_back(p[2].values[i]/a2 * std::pow(time[i], d-4) * std::pow(p[4].values[i],-2));
+        plot_vals[7].push_back(p[1].values[i]/p[4].values[i]/time[i]/time[i]);
+        plot_vals[8].push_back(p[2].values[i]/p[4].values[i]/time[i]/time[i]);
     }
 
-    std::vector<QCustomPlot*> composite_plots{ui->uPlot, ui->tauPlot, ui->yPlot, ui->stiffPlot, ui->etaPlot, ui->universalPlot};
+    std::vector<QCustomPlot*> composite_plots{ui->yPlot, ui->kappaPlot, ui->etaPlot, ui->universalPlot, ui->alphaPlot};
+    std::vector<bool> logplot{                true,      true,         false,       false,             true};
     for(size_t i=0; i<composite_plots.size(); i++){
-        composite_plots[i]->yAxis->setScaleType(QCPAxis::stLinear);
-        addGraph(composite_plots[i], time, plot_vals[i]);
+        if(logplot[i]){
+            composite_plots[i]->yAxis->setScaleType(QCPAxis::stLogarithmic);
+        } else {
+            composite_plots[i]->yAxis->setScaleType(QCPAxis::stLinear);
+        }
+        addGraph(composite_plots[i], log_time, plot_vals[i], logplot[i]);
     }
 
+    ui->m2Plot->yAxis->setScaleType(QCPAxis::stLogarithmic);
+    addGraph(ui->m2Plot, log_time, plot_vals[7], true, 2);
+    addGraph(ui->m2Plot, log_time, plot_vals[8], true, 2);
+
+    ui->uPlot->yAxis->setScaleType(QCPAxis::stLogarithmic);
+    if(plot_vals[6][0] != 0){
+        addGraph(ui->uPlot, log_time, plot_vals[5], true, 2);
+        addGraph(ui->uPlot, log_time, plot_vals[6], true, 2);
+    } else {
+        addGraph(ui->uPlot, log_time, plot_vals[5], true, 1);
+    }
     //auto max = std::max_element(plot_vals[3].begin(), plot_vals[3].end());
 
     ui->etaAlphaPlot->xAxis->setRange(0,1.);
     ui->uAlphaPlot->xAxis->setRange(0,1.);
-    addGraph(ui->etaAlphaPlot, plot_vals[3], plot_vals[4]);
-    addGraph(ui->uAlphaPlot, plot_vals[3], plot_vals[6], true);
+    addGraph(ui->etaAlphaPlot, plot_vals[1], plot_vals[2]);
+    addGraph(ui->uAlphaPlot, plot_vals[1], plot_vals[0], true);
+
+
+    double lower=ui->ulPlot->xAxis->range().lower;
+    double upper=ui->ulPlot->xAxis->range().upper;
+    if(lower == 0){
+        lower = INFINITY;
+        upper = -INFINITY;
+    }
+    lower = std::min(lower, *std::min_element(plot_vals[5].begin(), plot_vals[5].end()));
+    upper = std::max(upper, *std::max_element(plot_vals[5].begin(), plot_vals[5].end()));
+
+    ui->ulPlot->yAxis->setScaleType(QCPAxis::stLogarithmic);
+    ui->ulPlot->xAxis->setScaleType(QCPAxis::stLogarithmic);
+
+    ui->ulPlot->xAxis->setRange(lower, upper);
+    QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
+    ui->ulPlot->yAxis->setTicker(logTicker);
+    ui->ulPlot->xAxis->setTicker(logTicker);
+    addGraph(ui->ulPlot, plot_vals[5], plot_vals[6], true);
 
     std::cout<<"\a"<<std::flush;
 }
@@ -278,8 +328,9 @@ void MainWindow::on_clearButton_clicked()
     std::vector<QCustomPlot*> plots2 = plots;
     plots2.push_back(ui->etaAlphaPlot);
     plots2.push_back(ui->uAlphaPlot);
+    plots2.push_back(ui->ulPlot);
     for(auto&& p: plots2){
-        p->clearGraphs();
+        p->clearPlottables();
         p->replot();
     }
     results.clear();

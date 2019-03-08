@@ -8,20 +8,20 @@
 #include "simpson.h"
 #include "regulator.h"
 
-double A_der_hex(RealVector x, double L, double zp_der){
+double A_der_hex(RealVector x, double L, double zp_der, double d, double d_factor){
     double u = x[1]; //Wartości u, l i Y są tu pomnożone przez alpha2
     double l = x[2];      //Żeby uniknąć osobliwości
     double Y = (x[3]-x[4]);
     double L2 = L*L;
     auto integrand = [&](double y){
-        return (x[4]*R01(L,y)+zp_der*R(L,y))*(
+        return std::pow(y,d/2-1)*(x[4]*R01(L,y)+zp_der*R(L,y))*(
                     (3*u+2*Y*y*L2)*std::pow(G(x[1],x[3],x[4],L,y),2)
                      +(u+4*l)*std::pow(G(x[2],x[4],x[4],L,y),2)); };
 
-    return x[5]*L2/(8*M_PI*x[0]*x[1])*integral(integrand);
+    return x[5]*d_factor*std::pow(L,d)/(2*x[0]*x[1])*integral(integrand);
 }
 
-double Ms_der_hex(RealVector x, double L, double zp_der){
+double Ms_der_hex(RealVector x, double L, double zp_der, double d, double d_factor){
     double a2 = x[0]*x[0];
     double u = x[1]; //Wartości u, l i Y są tu pomnożone przez alpha2
     double l = x[2]; //Żeby uniknąć osobliwości
@@ -33,16 +33,16 @@ double Ms_der_hex(RealVector x, double L, double zp_der){
         auto Gs = G(x[1],x[3],x[4],L,y);
         auto Gp = G(x[2],x[4],x[4],L,y);
 
-        return (x[4]*R01(L,y)+zp_der*R(L,y))*
+        return std::pow(y,d/2-1)*(x[4]*R01(L,y)+zp_der*R(L,y))*
                 (potential*std::pow(Gs,2)+u*std::pow(Gp,2)
                  +std::pow(potential,2)*std::pow(Gs,3)
                  +std::pow(u+4*l,2)*std::pow(Gp,3));
     };
 
-    return x[5]*L2/(4*M_PI*a2)*integral(integrand);
+    return x[5]*d_factor*std::pow(L,d)*integral(integrand)/a2;
 }
 
-double Mp_der_hex(RealVector x, double L, double zp_der){
+double Mp_der_hex(RealVector x, double L, double zp_der, double d, double d_factor){
 
     double a2 = x[0]*x[0];
     double u = x[1]; //Wartości u, l i Y są tu pomnożone przez alpha2
@@ -56,15 +56,15 @@ double Mp_der_hex(RealVector x, double L, double zp_der){
         auto Gp = G(x[2],x[4],x[4],L,y);
         double Gs2 = std::pow(Gs,2), Gp2 = std::pow(Gp,2);
 
-        return 2*(x[4]*R01(L,y)+zp_der*R(L,y))
+        return std::pow(y,d/2-1)*2*(x[4]*R01(L,y)+zp_der*R(L,y))
                     *((1/x[1])*((2*uq+3*u)*Gs2+(u+4*l)*Gp2)
                       +(11*uq+14*l)*Gs*Gp*(Gs+Gp));
     };
 
-    return x[5]*L2*x[2]/(4*M_PI*a2)*integral(integrand);
+    return x[5]*d_factor*std::pow(L,d)*x[2]*integral(integrand)/a2;
 }
 
-double Zs_der_hex(RealVector x, double L, double zp_der){
+double Zs_der_hex(RealVector x, double L, double zp_der, double d, double d_factor){
     double a2 = x[0]*x[0];
     double u = x[1]; //Wartości u, l i Y są tu pomnożone przez alpha2
     double l = x[2];  //Żeby uniknąć osobliwości
@@ -96,7 +96,8 @@ double Zs_der_hex(RealVector x, double L, double zp_der){
             Gp[i] = Gp[1]*Gp[i-1];
         }
 
-        return Y/u*Gs[2]*2*uq*r01
+        return std::pow(y,d/2-1)*
+        	   (Y/u*Gs[2]*2*uq*r01
                +Gs[3]*(0.5*ps2*r21
                       +2*r01*Y*(u+5*uq)
                       +2*q2*Y*ps*r11)
@@ -109,13 +110,13 @@ double Zs_der_hex(RealVector x, double L, double zp_der){
                       +2*Y*pp*r01)
                -Gp[4]*pp2*(2*q2*r10*r11
                           +1.5*r20*r01)
-               +Gp[5]*4*q2*pp2*r10*r10*r01;
+               +Gp[5]*4*q2*pp2*r10*r10*r01);
     };
 
-    return x[5]*L2/(4*M_PI*a2)*integral(integrand);
+    return x[5]*d_factor*std::pow(L,d)*integral(integrand)/a2;
 }
 
-double Zp_der_hex(RealVector x, double L){
+double Zp_der_hex(RealVector x, double L, double d, double d_factor){
     double a2 = x[0]*x[0];
     double u = x[1]; //Wartości u, l i Y są tu pomnożone przez alpha2
     double l = x[2]/3;  //Żeby uniknąć osobliwości
@@ -149,7 +150,7 @@ double Zp_der_hex(RealVector x, double L){
                                 +Gp[2]*(r00*zr20*(-Gs-2*Gp[1])
                                         +(q2*r20+r10))));
 
-        return Z_der;
+        return std::pow(y,d/2-1)*Z_der;
     };
 
     auto integrand = [&](double y){
@@ -179,10 +180,10 @@ double Zp_der_hex(RealVector x, double L){
                                 +zr21*Gp[2])
                             );
 
-        return Z_part;
+        return std::pow(y,d/2-1)*Z_part;
     };
-    double Z_der_integrated = x[5]*L2/(4*M_PI*a2)*integral(Z_der);
-    double integrated = x[5]*L2/(4*M_PI*a2)*integral(integrand);
+    double Z_der_integrated = x[5]*d_factor*std::pow(L,d)*integral(Z_der)/a2;
+    double integrated = x[5]*d_factor*std::pow(L,d)*integral(integrand)/a2;
     //std::cout<<L<<' '<<Z_der_integrated<<' '<<integrated<<' '<<integrated/(1-Z_der_integrated)<<std::endl;
     return integrated/(1-Z_der_integrated);
 }

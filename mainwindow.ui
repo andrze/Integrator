@@ -61,26 +61,26 @@
      <rect>
       <x>10</x>
       <y>120</y>
-      <width>191</width>
+      <width>181</width>
       <height>181</height>
      </rect>
     </property>
    </widget>
-   <widget class="QCustomPlot" name="msPlot" native="true">
+   <widget class="QCustomPlot" name="mPlot" native="true">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>400</x>
       <y>120</y>
       <width>191</width>
       <height>181</height>
      </rect>
     </property>
    </widget>
-   <widget class="QCustomPlot" name="mpPlot" native="true">
+   <widget class="QCustomPlot" name="kappaPlot" native="true">
     <property name="geometry">
      <rect>
-      <x>410</x>
-      <y>120</y>
+      <x>10</x>
+      <y>320</y>
       <width>181</width>
       <height>181</height>
      </rect>
@@ -102,12 +102,12 @@
      <string>Save</string>
     </property>
    </widget>
-   <widget class="QCustomPlot" name="tauPlot" native="true">
+   <widget class="QCustomPlot" name="ulPlot" native="true">
     <property name="geometry">
      <rect>
       <x>210</x>
       <y>320</y>
-      <width>191</width>
+      <width>181</width>
       <height>181</height>
      </rect>
     </property>
@@ -115,7 +115,7 @@
    <widget class="QCustomPlot" name="yPlot" native="true">
     <property name="geometry">
      <rect>
-      <x>410</x>
+      <x>600</x>
       <y>320</y>
       <width>181</width>
       <height>181</height>
@@ -125,8 +125,8 @@
    <widget class="QCustomPlot" name="uPlot" native="true">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>320</y>
+      <x>200</x>
+      <y>120</y>
       <width>191</width>
       <height>181</height>
      </rect>
@@ -171,10 +171,10 @@
      <double>0.010000000000000</double>
     </property>
    </widget>
-   <widget class="QCustomPlot" name="stiffPlot" native="true">
+   <widget class="QCustomPlot" name="m2Plot" native="true">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>400</x>
       <y>320</y>
       <width>181</width>
       <height>181</height>
@@ -340,7 +340,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Alpha</string>
+     <string>Alpha^2</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -349,14 +349,14 @@
    <widget class="QLabel" name="label_13">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>300</y>
+      <x>200</x>
+      <y>100</y>
       <width>191</width>
       <height>17</height>
      </rect>
     </property>
     <property name="text">
-     <string>u</string>
+     <string>u &amp; lambda</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -372,7 +372,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>lambda</string>
+     <string>lambda vs u</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -381,14 +381,14 @@
    <widget class="QLabel" name="label_15">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>400</x>
       <y>100</y>
       <width>191</width>
       <height>17</height>
      </rect>
     </property>
     <property name="text">
-     <string>Sigma Mass</string>
+     <string>Sigma Mass &amp; Pi Mass</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -397,14 +397,14 @@
    <widget class="QLabel" name="label_16">
     <property name="geometry">
      <rect>
-      <x>410</x>
-      <y>100</y>
+      <x>10</x>
+      <y>300</y>
       <width>191</width>
       <height>17</height>
      </rect>
     </property>
     <property name="text">
-     <string>Pi Mass</string>
+     <string>Kappa</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -413,7 +413,7 @@
    <widget class="QLabel" name="label_17">
     <property name="geometry">
      <rect>
-      <x>410</x>
+      <x>600</x>
       <y>300</y>
       <width>191</width>
       <height>17</height>
@@ -429,14 +429,14 @@
    <widget class="QLabel" name="label_18">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>400</x>
       <y>300</y>
       <width>181</width>
       <height>17</height>
      </rect>
     </property>
     <property name="text">
-     <string>J = Z alpha2</string>
+     <string>Masses Rescaled</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -491,7 +491,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>J eta/T</string>
+     <string>Kappa eta/T</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -568,7 +568,7 @@
      <double>0.001000000000000</double>
     </property>
     <property name="value">
-     <double>0.600000000000000</double>
+     <double>1.000000000000000</double>
     </property>
    </widget>
    <widget class="QPushButton" name="clearButton">

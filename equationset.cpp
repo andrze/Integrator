@@ -7,7 +7,7 @@ EquationSet::EquationSet(bool cubic, double dimension)
 {
     this->cubic = cubic;
     this->d = dimension;
-    d_factor = std::pow(M_PI, dimension/2)*std::pow(2*M_PI,-d)/std::tgamma(dimension/2);
+    d_factor = 2/d*std::pow(M_PI, dimension/2)*std::pow(2*M_PI,-d)/std::tgamma(dimension/2);
 }
 
 RealVector EquationSet::evaluate(RealVector point, double L){

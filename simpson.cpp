@@ -11,13 +11,6 @@ double integral(std::function<double(double)> func){
     double result=0.;
     int num_steps=51;
     double cutoff=300;
-/*
-    auto func_copy = func;
-    if(std::isinf(func(0.)) ){
-        func = [&](double q){
-            return 2*q*func_copy(q*q);
-        };
-    } */
     double f0 = std::abs(func(q));
 
     for(int i=1; i<=30; i++){

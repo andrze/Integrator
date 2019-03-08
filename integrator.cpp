@@ -24,7 +24,7 @@ std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, doub
     double old_t = start_t;
     double t = start_t;
     double jump = exp(delta_t);
-    int ordered_phase_stalling = 50;
+    int ordered_phase_stalling = 20;
     if(scan){
         scan->push_back(PlotSet(starting_point.coords.size()));
     }
@@ -70,7 +70,7 @@ std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, doub
         if(plots.plot_size() > 1){
 			double eta_k1 = plots.eta(plots.plot_size()-2);
 			double eta_k = plots.eta(plots.plot_size()-1);
-            if(eta_k < -1 || eta_k > 0.75 || eta_k - eta_k1 > 0.05){
+            if(eta_k < -0.01 || eta_k > 0.75 || eta_k - eta_k1 > 0.15){
 				end = true;
 				end_points.insert(6);
 			}
