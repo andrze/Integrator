@@ -171,7 +171,7 @@ void MainWindow::plot_result(PlotSet *res){
     }
     double d = ui->dimensionBox->value();
 
-    if(p[2].values[0] != 0){
+    if(p[2].values[0] > 0){
         add_graph(ui->mPlot, log_time, p[1].values, true, 2);
         add_graph(ui->mPlot, log_time, p[2].values, true, 2);
     } else {
@@ -182,10 +182,7 @@ void MainWindow::plot_result(PlotSet *res){
 
 
     for(size_t i=0; i<p[0].values.size(); i++){
-        double pow_time = 1;
-        if(d!=2){
-            pow_time = std::pow(time[i],(2-d)/2);
-        }
+        double pow_time = std::pow(time[i],(2-d)/2);
         double a2 = std::pow(p[0].values[i],2);
         double kappa = a2*p[4].values[i]*pow_time*pow_time;
         plot_vals[0].push_back(kappa);                                                          // kappa
@@ -215,7 +212,7 @@ void MainWindow::plot_result(PlotSet *res){
     add_graph(ui->m2Plot, log_time, plot_vals[6], true, 2);
     add_graph(ui->m2Plot, log_time, plot_vals[7], true, 2);
 
-    if(plot_vals[5][0] != 0){
+    if(plot_vals[5][0] > 0){
         add_graph(ui->uPlot, log_time, plot_vals[4], true, 2);
         add_graph(ui->uPlot, log_time, plot_vals[5], true, 2);
     } else {
