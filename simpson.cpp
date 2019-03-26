@@ -21,7 +21,7 @@ double integral(std::function<double(double)> func){
     }
     //std::cerr << f0 <<'\n';
 
-    for(int i=0; i<200; i++){
+    for(int i=0; i<400; i++){
         double coef = std::pow(std::abs(func(q)/f0),0.2);
         double h;
         if(coef >= h0*std::numeric_limits<double>::epsilon()){

@@ -27,8 +27,9 @@ private:
     std::pair<PlotSet,int> integrate();
     std::pair<PlotSet,int> integrate(RealVector start_point);
     std::vector<PlotSet > results;
-    void reset_xAxis();
+    void reset_axes();
     std::vector<QCustomPlot*> plots;
+    std::vector<bool> is_plot_log;
     //std::vector<std::pair<double,double> > critical_line;
     std::atomic<bool> stop;
     std::mutex data_mutex;

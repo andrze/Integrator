@@ -28,7 +28,8 @@ SOURCES += main.cpp \
     physics_cubic.cpp \
     physics_hex.cpp \
     plot.cpp \
-    plotset.cpp
+    plotset.cpp \
+    qcp_extension.cpp
 
 HEADERS += \
     integrator.h \
@@ -41,7 +42,8 @@ HEADERS += \
     physics_hex.h \
     simpson.h \
     plot.h \
-    plotset.h
+    plotset.h \
+    qcp_extension.h
 
 QMAKE_CXXFLAGS += -std=c++14
 

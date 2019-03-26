@@ -58,7 +58,7 @@ std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, doub
         bool end=false;
         std::set<size_t> end_points;
         for(size_t j=0; j<point.coords.size(); j++){
-            if(point[j]<0){
+            if(point[j]<0 && j!=3){
                 end_points.insert(j);
                 end=true;
             }

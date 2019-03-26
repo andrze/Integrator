@@ -15,82 +15,7 @@
 #include <iomanip>
 #include <limits>
 #include <thread>
-
-static std::vector<QPen> color{QPen(Qt::blue), QPen(Qt::red), QPen(Qt::green),
-                               QPen(Qt::darkYellow), QPen(Qt::darkMagenta), QPen(Qt::cyan)};
-
-
-void addGraph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double> vals,
-              bool logplot=false, int parts=1){
-    QVector<double> x = QVector<double>::fromStdVector(xvals);
-    QVector<double> y = QVector<double>::fromStdVector(vals);
-
-    if(plot->yAxis->range().lower == 0. || plot->yAxis->range().lower == 5.){
-        if(logplot){
-            plot->yAxis->setRange(0.9, 1.1);
-        } else {
-            plot->yAxis->setRange(0., 0.00000001);
-        }
-    }
-
-    int graph_num = plot->plottableCount();
-    int limit = 6*parts;
-    if(graph_num >= 2*limit){
-        for(int i=1; i<=limit; i++){
-            plot->removePlottable(graph_num-i);
-        }
-        graph_num -= limit;
-    }
-
-    if (graph_num >= limit){
-        graph_num -= limit;
-    }
-
-    QCPCurve* curve = new QCPCurve(plot->xAxis, plot->yAxis);
-
-    auto pen = color[size_t(graph_num/parts)];
-    pen.setStyle(Qt::SolidLine);
-    curve->setPen(pen);
-    if(parts>1 && graph_num%2 == 0){
-        auto pen = curve->pen();
-        pen.setStyle(Qt::DotLine);
-        curve->setPen(pen);
-    }
-    curve->setData(x,y);
-
-    auto yrange = plot->yAxis->range();
-    auto max = *std::max_element(vals.begin(), vals.end());
-    if(!logplot){
-        auto min = *std::min_element(vals.begin(), vals.end());
-        double diff = max - min;
-        if(diff > 0){
-            plot->yAxis->setRange(std::min(min-diff/8, yrange.lower), std::max(max+diff/8, yrange.upper));
-        }
-
-    } else {
-        auto min = max;
-        for(auto v: vals){
-            if(v < min && v > 0.){
-                min = v;
-            }
-        }
-        plot->yAxis->setScaleType(QCPAxis::stLogarithmic);
-        QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
-        plot->yAxis->setTicker(logTicker);
-
-        if(max <= 0){
-            plot->yAxis->setRange(1e-10,10);
-        } else {
-            double diff = max / min;
-            if(diff <= 1.){
-                diff = exp(5.);
-            }
-            diff = std::pow(diff, 0.1);
-            plot->yAxis->setRange(std::min(std::abs(min/diff), std::abs(yrange.lower)), std::max(max*diff, yrange.upper));
-        }
-    }
-    plot->replot();
-}
+#include "qcp_extension.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -101,10 +26,12 @@ MainWindow::MainWindow(QWidget *parent) :
     plots = std::vector<QCustomPlot*>{ui->alphaPlot, ui->mPlot, ui->kappaPlot, ui->zPlot, ui->universalPlot,
                 ui->uPlot, ui->yPlot, ui->m2Plot, ui->etaPlot,};
 
+    is_plot_log = std::vector<bool>{true, true, true, true, false, true, true, true, false};
+
     EquationSet equations(ui->cubicRadioButton->isChecked(), ui->dimensionBox->value());
     integrator = Integrator(equations);
     ui->tsenseBox->valueChanged(ui->tsenseBox->value());
-    this->reset_xAxis();
+    this->reset_axes();
     connect(this, SIGNAL(calculated(PlotSet*)), this, SLOT(plot_result(PlotSet*)));
 }
 
@@ -236,7 +163,7 @@ void MainWindow::on_pushButton_clicked(){
 
 void MainWindow::plot_result(PlotSet *res){
     auto p = *res;
-    std::array<std::vector<double>, 9> plot_vals;
+    std::array<std::vector<double>, 10> plot_vals;
     std::vector<double> time, log_time;
     for(auto t: p[0].times){
         time.push_back(t);
@@ -245,13 +172,13 @@ void MainWindow::plot_result(PlotSet *res){
     double d = ui->dimensionBox->value();
 
     if(p[2].values[0] != 0){
-        addGraph(ui->mPlot, log_time, p[1].values, true, 2);
-        addGraph(ui->mPlot, log_time, p[2].values, true, 2);
+        add_graph(ui->mPlot, log_time, p[1].values, true, 2);
+        add_graph(ui->mPlot, log_time, p[2].values, true, 2);
     } else {
-        addGraph(ui->mPlot, log_time, p[1].values, true, 1);
+        add_graph(ui->mPlot, log_time, p[1].values, true, 1);
     }
-    addGraph(ui->zPlot, log_time, p[3].values, true, 2);
-    addGraph(ui->zPlot, log_time, p[4].values, true, 2);
+    add_graph(ui->zPlot, log_time, p[3].values, true, 2);
+    add_graph(ui->zPlot, log_time, p[4].values, true, 2);
 
 
     for(size_t i=0; i<p[0].values.size(); i++){
@@ -261,65 +188,62 @@ void MainWindow::plot_result(PlotSet *res){
         }
         double a2 = std::pow(p[0].values[i],2);
         double kappa = a2*p[4].values[i]*pow_time*pow_time;
-        plot_vals[0].push_back((p[3].values[i]-p[4].values[i])/kappa);
-        plot_vals[1].push_back(kappa);
-        plot_vals[2].push_back(p.eta(i));
-        plot_vals[3].push_back(p.eta(i)*kappa/p[5].values[i]);
-        plot_vals[4].push_back(a2);
-        plot_vals[5].push_back(p[1].values[i]/a2 * std::pow(time[i], d-4) * std::pow(p[4].values[i],-2));
-        plot_vals[6].push_back(p[2].values[i]/a2 * std::pow(time[i], d-4) * std::pow(p[4].values[i],-2));
-        plot_vals[7].push_back(p[1].values[i]/p[4].values[i]/time[i]/time[i]);
-        plot_vals[8].push_back(p[2].values[i]/p[4].values[i]/time[i]/time[i]);
-    }
-
-    std::vector<QCustomPlot*> composite_plots{ui->yPlot, ui->kappaPlot, ui->etaPlot, ui->universalPlot, ui->alphaPlot};
-    std::vector<bool> logplot{                true,      true,         false,       false,             true};
-    for(size_t i=0; i<composite_plots.size(); i++){
-        if(logplot[i]){
-            composite_plots[i]->yAxis->setScaleType(QCPAxis::stLogarithmic);
+        plot_vals[0].push_back(kappa);                                                          // kappa
+        plot_vals[1].push_back(p.eta(i));                                                       // eta
+        plot_vals[2].push_back(p.eta(i)*kappa/p[5].values[i]);                                  // J eta / T
+        plot_vals[3].push_back(a2);                                                             // alpha^2
+        plot_vals[4].push_back(p[1].values[i]/a2 * std::pow(time[i], d-4) * std::pow(p[4].values[i],-2)); // u~
+        plot_vals[5].push_back(p[2].values[i]/a2 * std::pow(time[i], d-4) * std::pow(p[4].values[i],-2)); // lambda~
+        plot_vals[6].push_back(p[1].values[i]/p[4].values[i]/time[i]/time[i]); // m sigma~
+        plot_vals[7].push_back(p[2].values[i]/p[4].values[i]/time[i]/time[i]); // m pi~
+        double y = (p[3].values[i]/p[4].values[i]-1)/kappa;
+        if(y >= 0){
+            plot_vals[8].push_back(y); // y positive part
+            plot_vals[9].push_back(0);
         } else {
-            composite_plots[i]->yAxis->setScaleType(QCPAxis::stLinear);
+            plot_vals[8].push_back(0);
+            plot_vals[9].push_back(-y); // y negative part
         }
-        addGraph(composite_plots[i], log_time, plot_vals[i], logplot[i]);
     }
 
-    ui->m2Plot->yAxis->setScaleType(QCPAxis::stLogarithmic);
-    addGraph(ui->m2Plot, log_time, plot_vals[7], true, 2);
-    addGraph(ui->m2Plot, log_time, plot_vals[8], true, 2);
+    std::vector<QCustomPlot*> composite_plots{ui->kappaPlot, ui->etaPlot, ui->universalPlot, ui->alphaPlot};
+    std::vector<bool> logplot{                true,         false,       false,             true};
+    for(size_t i=0; i<composite_plots.size(); i++){
+        add_graph(composite_plots[i], log_time, plot_vals[i], logplot[i]);
+    }
 
-    ui->uPlot->yAxis->setScaleType(QCPAxis::stLogarithmic);
-    if(plot_vals[6][0] != 0){
-        addGraph(ui->uPlot, log_time, plot_vals[5], true, 2);
-        addGraph(ui->uPlot, log_time, plot_vals[6], true, 2);
+    add_graph(ui->m2Plot, log_time, plot_vals[6], true, 2);
+    add_graph(ui->m2Plot, log_time, plot_vals[7], true, 2);
+
+    if(plot_vals[5][0] != 0){
+        add_graph(ui->uPlot, log_time, plot_vals[4], true, 2);
+        add_graph(ui->uPlot, log_time, plot_vals[5], true, 2);
     } else {
-        addGraph(ui->uPlot, log_time, plot_vals[5], true, 1);
+        add_graph(ui->uPlot, log_time, plot_vals[4], true, 1);
     }
-    //auto max = std::max_element(plot_vals[3].begin(), plot_vals[3].end());
 
-    ui->etaAlphaPlot->xAxis->setRange(0,1.);
-    ui->uAlphaPlot->xAxis->setRange(0,1.);
-    addGraph(ui->etaAlphaPlot, plot_vals[1], plot_vals[2]);
-    addGraph(ui->uAlphaPlot, plot_vals[1], plot_vals[0], true);
+    add_graph(ui->yPlot, log_time, plot_vals[9], true, 2);
+    add_graph(ui->yPlot, log_time, plot_vals[8], true, 2);
 
 
-    double lower=ui->ulPlot->xAxis->range().lower;
-    double upper=ui->ulPlot->xAxis->range().upper;
-    if(lower == 0){
-        lower = INFINITY;
-        upper = -INFINITY;
-    }
-    lower = std::min(lower, *std::min_element(plot_vals[5].begin(), plot_vals[5].end()));
-    upper = std::max(upper, *std::max_element(plot_vals[5].begin(), plot_vals[5].end()));
+    add_graph(ui->etaAlphaPlot, plot_vals[0], plot_vals[1]);
+    rescale_axes(ui->etaAlphaPlot, 0., 1., false);
 
-    ui->ulPlot->yAxis->setScaleType(QCPAxis::stLogarithmic);
+    add_graph(ui->uAlphaPlot, plot_vals[0], plot_vals[4], true);
+    rescale_axes(ui->uAlphaPlot, 0., 1., true);
+
     ui->ulPlot->xAxis->setScaleType(QCPAxis::stLogarithmic);
+    add_graph(ui->ulPlot, plot_vals[4], plot_vals[5], true);
+    auto range = get_x_range(ui->ulPlot);
+    range.upper = std::min(200., range.upper);
 
-    ui->ulPlot->xAxis->setRange(lower, upper);
+    rescale_axes(ui->ulPlot, range.lower, range.upper, true);
+
     QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
-    ui->ulPlot->yAxis->setTicker(logTicker);
     ui->ulPlot->xAxis->setTicker(logTicker);
-    addGraph(ui->ulPlot, plot_vals[5], plot_vals[6], true);
 
+
+    reset_axes();
     std::cout<<"\a"<<std::flush;
 }
 
@@ -336,22 +260,22 @@ void MainWindow::on_clearButton_clicked()
     results.clear();
 }
 
-void MainWindow::reset_xAxis(){
+void MainWindow::reset_axes(){
 
-    for(auto&& p: plots){
+    for(size_t i=0; i<plots.size(); i++){
         double lower = ui->xMinSpinBox->value();
         double upper = ui->xMaxSpinBox->value();
-        p->xAxis->setRange(lower, upper);
-        p->replot();
+
+        rescale_axes(plots[i], lower, upper, is_plot_log[i]);
     }
 }
 
 void MainWindow::on_xMinSpinBox_valueChanged(double){
-    reset_xAxis();
+    reset_axes();
 }
 
 void MainWindow::on_xMaxSpinBox_valueChanged(double){
-    reset_xAxis();
+    reset_axes();
 }
 
 void MainWindow::restart_integrator(){
