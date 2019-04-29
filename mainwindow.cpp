@@ -163,7 +163,7 @@ void MainWindow::on_pushButton_clicked(){
 
 void MainWindow::plot_result(PlotSet *res){
     auto p = *res;
-    std::array<std::vector<double>, 10> plot_vals;
+    std::array<std::vector<double>, 11> plot_vals;
     std::vector<double> time, log_time;
     for(auto t: p[0].times){
         time.push_back(t);
@@ -186,9 +186,9 @@ void MainWindow::plot_result(PlotSet *res){
         double a2 = std::pow(p[0].values[i],2);
         double kappa = a2*p[4].values[i]*pow_time*pow_time;
         plot_vals[0].push_back(kappa);                                                          // kappa
-        plot_vals[1].push_back(p.eta(i));                                                       // eta
-        plot_vals[2].push_back(p.eta(i)*kappa/p[5].values[i]);                                  // J eta / T
-        plot_vals[3].push_back(a2);                                                             // alpha^2
+        plot_vals[1].push_back(p.eta(i)*kappa/p[5].values[i]);                                  // J eta / T
+        plot_vals[2].push_back(a2);                                                             // alpha^2
+        plot_vals[3].push_back(p.eta(i));                                                       // eta
         plot_vals[4].push_back(p[1].values[i]/a2 * std::pow(time[i], d-4) * std::pow(p[4].values[i],-2)); // u~
         plot_vals[5].push_back(p[2].values[i]/a2 * std::pow(time[i], d-4) * std::pow(p[4].values[i],-2)); // lambda~
         plot_vals[6].push_back(p[1].values[i]/p[4].values[i]/time[i]/time[i]); // m sigma~
@@ -201,13 +201,17 @@ void MainWindow::plot_result(PlotSet *res){
             plot_vals[8].push_back(0);
             plot_vals[9].push_back(-y); // y negative part
         }
+        plot_vals[10].push_back(p[3].exp_time_log_der(i)); //eta sigma
     }
 
-    std::vector<QCustomPlot*> composite_plots{ui->kappaPlot, ui->etaPlot, ui->universalPlot, ui->alphaPlot};
-    std::vector<bool> logplot{                true,         false,       false,             true};
+    std::vector<QCustomPlot*> composite_plots{ui->kappaPlot, ui->universalPlot, ui->alphaPlot};
+    std::vector<bool> logplot{                true,          false,             true};
     for(size_t i=0; i<composite_plots.size(); i++){
         add_graph(composite_plots[i], log_time, plot_vals[i], logplot[i]);
     }
+
+    add_graph(ui->etaPlot, log_time, plot_vals[10], false, 2);
+    add_graph(ui->etaPlot, log_time, plot_vals[3], false, 2);
 
     add_graph(ui->m2Plot, log_time, plot_vals[6], true, 2);
     add_graph(ui->m2Plot, log_time, plot_vals[7], true, 2);
