@@ -93,7 +93,7 @@ int PlotSet::phase_diagnosis(){
 		start = 1;
 	}
     for(size_t i=start; i<plot_size; i++){
-        if(std::abs(plots[0].exp_time_log_der(i)) < 1e-04){
+        if(std::abs(plots[0].exp_time_log_der(i)) < 1e-04 && std::abs(plots[1].exp_time_log_der(i)) < 1e-04 ){
         //if(plots[0].values[i] > 1e-0{
             return 2;
         }
