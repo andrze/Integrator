@@ -77,7 +77,10 @@ double operator * (RealVector lhs, RealVector rhs) {
 
 std::ostream& operator << (std::ostream& out, RealVector v) {
     for(size_t i=0; i<v.coords.size(); i++){
-        out << v[i] << " ";
+        if(i!=0){
+            out<< ", ";
+        }
+        out << v[i] ;
     }
     return out;
 }

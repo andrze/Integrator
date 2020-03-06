@@ -36,20 +36,29 @@ void PlotSet::pop_from_each(){
 	}
 }
 
+RealVector PlotSet::point(size_t i, bool values){
+    std::vector<double> coords;
+    for(size_t j=0; j<plots.size(); j++){
+        if(values){
+            coords.push_back(plots[j].values[i]);
+        } else {
+            coords.push_back(plots[j].derivatives[i]);
+        }
+    }
+    return RealVector(coords);
+}
+
+
+RealVector PlotSet::starting_point(){
+    return point(0);
+}
+
 RealVector PlotSet::back_vals(){
-	std::vector<double> coords;
-	for(size_t i=0; i<plots.size(); i++){
-		coords.push_back(plots[i].values.back());
-	}
-	return RealVector(coords);
+    return point(plot_size()-1, true);
 }
 
 RealVector PlotSet::back_ders(){
-	std::vector<double> coords;
-	for(size_t i=0; i<plots.size(); i++){
-		coords.push_back(plots[i].derivatives.back());
-	}
-	return RealVector(coords);
+    return point(plot_size()-1, false);
 }
 
 double PlotSet::back_time(){
@@ -86,18 +95,53 @@ double PlotSet::eta(size_t k){
     return plots[4].exp_time_log_der(k);
 }
 
-int PlotSet::phase_diagnosis(){
+Plot PlotSet::rescaled(size_t k, double d){
+    if(k > this->plot_number()){
+        throw std::invalid_argument("Argument larger than number of plots");
+    }
+
+    if(this->plot_number() < 5){
+        throw std::invalid_argument("Not enough plots to allow rescaling");
+    }
+
+    Plot rescaled;
+    rescaled.times = this->plots[k].times;
+    for(size_t i=0; i<this->plot_size(); i++){
+        double Z = this->plots[4].values[i];
+        double T = this->plots[5].values[i];
+        double scaling = 1;
+        if(k==0){
+            scaling = std::sqrt(Z)*std::pow(rescaled.times[i],(2-d)/2)/sqrt(T);
+        } else if(k==1 || k==2){
+            scaling = T/(Z*rescaled.times[i]*rescaled.times[i]);
+        }
+
+        rescaled.values.push_back(this->plots[k].values[i]*scaling);
+        rescaled.derivatives.push_back(this->plots[k].derivatives[i]*scaling);
+    }
+
+    return rescaled;
+}
+
+int PlotSet::phase_diagnosis(double d){
 	size_t plot_size = this->plot_size();
 	size_t start = plot_size-10;
 	if(plot_size < 11){
 		start = 1;
 	}
     for(size_t i=start; i<plot_size; i++){
-        if(std::abs(plots[0].exp_time_log_der(i)) < 1e-04 && std::abs(plots[1].exp_time_log_der(i)) < 1e-04 ){
-        //if(plots[0].values[i] > 1e-0{
+        if(std::abs(plots[0].exp_time_log_der(i)) < 1e-04 && (plots[2].values.back()==0. || std::abs(plots[1].exp_time_log_der(i)) < 1e-04 )){
+            //if(plots[0].values[i] > 1e-0{
             return 2;
         }
     }
+
+    auto alpha = this->rescaled(0,d);
+    auto mpi = this->rescaled(2,d);
+
+    /*if(d!=0 && mpi.values[1]/(alpha.values[1]*alpha.values[1]) < mpi.values[0]/(alpha.values[0]*alpha.values[0])){
+        return 1;
+    }*/
 
     for(size_t i=0; i<plot_size; i++){
         double k = std::pow(plots[0].values[i],2)*plots[4].values[i];

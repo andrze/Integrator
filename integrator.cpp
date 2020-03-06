@@ -7,6 +7,14 @@
 #include <iostream>
 #include <set>
 
+int signum(double x){
+    if(x>0){
+        return 1;
+    } else if(x<0){
+        return -1;
+    }
+    return 0;
+}
 
 Integrator::Integrator()
 {
@@ -58,11 +66,11 @@ std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, doub
         bool end=false;
         std::set<size_t> end_points;
         for(size_t j=0; j<point.coords.size(); j++){
-            if(point[j]<0 && j!=3){
+            if(signum(new_point[j])!=signum(point[j])){
                 end_points.insert(j);
                 end=true;
             }
-            if((j<3 && new_point[j] > point[j]) || (j>4 && new_point[j] < point[j])){
+            if((j>4 && new_point[j] < point[j])){
                 end_points.insert(j);
                 end=true;
             }
@@ -78,12 +86,17 @@ std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, doub
         if(end){
         	plots.pop_from_each();
 
-            std::cout<<"Zakończono w punkcie "<<point<<", "<< plots.eta(plots.plot_size()-1) <<" na wartościach ";
+            std::cout<<"Zakończono w punkcie "<<point;
+            if(plots.plot_size()>0){
+                std::cout<<", "<< plots.eta(plots.plot_size()-1);
+            }
+            std::cout << " na wartościach ";
+
             for(auto p: end_points){
                 std::cout<<p<<", ";
             }
             std::cout<<std::endl;
-            int ph = plots.phase_diagnosis();
+            int ph = plots.phase_diagnosis(equations.d);
             if(ph == 2){
                 ph = 0;
             }

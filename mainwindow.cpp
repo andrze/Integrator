@@ -41,10 +41,11 @@ MainWindow::~MainWindow()
 }
 
 std::pair<PlotSet, int> MainWindow::integrate(){
-    std::vector<double> coords({1,
-                                ui->uBox->value(), ui->tauBox->value(),
-                                1, 1,
-                                ui->TSpinBox->value()});
+    double kappa = ui->TSpinBox->value()*ui->TSpinBox->value();
+    std::vector<double> coords({ui->TSpinBox->value(),
+                                ui->uBox->value()*kappa, ui->tauBox->value()*kappa,
+                                1, 1+kappa*ui->YspinBox->value(),
+                                1});
     RealVector start(coords);
 
     return integrator.integrate(exp(-ui->startTimeBox->value()),
@@ -126,7 +127,6 @@ void MainWindow::on_tsenseBox_valueChanged(int arg1){
 }
 
 void MainWindow::on_pushButton_clicked(){
-
     auto func = [=](){
         PlotSet* last_el;
         ui->dimensionBox->setEnabled(false);
@@ -180,20 +180,25 @@ void MainWindow::plot_result(PlotSet *res){
     add_graph(ui->zPlot, log_time, p[3].values, true, 2);
     add_graph(ui->zPlot, log_time, p[4].values, true, 2);
 
+    Plot kappa = p.rescaled(0,d);
+    Plot u = p.rescaled(1,d);
+    Plot lambda = p.rescaled(2,d);
 
     for(size_t i=0; i<p[0].values.size(); i++){
-        double pow_time = std::pow(time[i],(2-d)/2);
         double a2 = std::pow(p[0].values[i],2);
-        double kappa = a2*p[4].values[i]*pow_time*pow_time;
-        plot_vals[0].push_back(kappa);                                                          // kappa
-        plot_vals[1].push_back(p.eta(i)*kappa/p[5].values[i]);                                  // J eta / T
+        double kappa_i = kappa.values[i]*kappa.values[i];
+        double u_i = u.values[i];
+        double l_i = lambda.values[i];
+
+        plot_vals[0].push_back(kappa_i);                                                          // kappa
+        plot_vals[1].push_back(p.eta(i)*kappa_i/p[5].values[i]);                                  // J eta / T
         plot_vals[2].push_back(a2);                                                             // alpha^2
         plot_vals[3].push_back(p.eta(i));                                                       // eta
-        plot_vals[4].push_back(p[1].values[i]/a2 * std::pow(time[i], d-4) * std::pow(p[4].values[i],-2)); // u~
-        plot_vals[5].push_back(p[2].values[i]/a2 * std::pow(time[i], d-4) * std::pow(p[4].values[i],-2)); // lambda~
-        plot_vals[6].push_back(p[1].values[i]/p[4].values[i]/time[i]/time[i]); // m sigma~
-        plot_vals[7].push_back(p[2].values[i]/p[4].values[i]/time[i]/time[i]); // m pi~
-        double y = (p[3].values[i]/p[4].values[i]-1)/kappa;
+        plot_vals[4].push_back(u_i/kappa_i); // u~
+        plot_vals[5].push_back(l_i/kappa_i); // lambda~
+        plot_vals[6].push_back(u_i); // m sigma~
+        plot_vals[7].push_back(l_i); // m pi~
+        double y = p[5].values[i]*(p[3].values[i]/p[4].values[i]-1)/kappa_i;
         if(y >= 0){
             plot_vals[8].push_back(y); // y positive part
             plot_vals[9].push_back(0);
@@ -248,8 +253,7 @@ void MainWindow::plot_result(PlotSet *res){
     std::cout<<"\a"<<std::flush;
 }
 
-void MainWindow::on_clearButton_clicked()
-{
+void MainWindow::on_clearButton_clicked(){
     std::vector<QCustomPlot*> plots2 = plots;
     plots2.push_back(ui->etaAlphaPlot);
     plots2.push_back(ui->uAlphaPlot);
@@ -259,6 +263,40 @@ void MainWindow::on_clearButton_clicked()
         p->replot();
     }
     results.clear();
+
+}
+
+void MainWindow::on_StabMatButton_clicked()
+{
+    double end_time = ui->endTimeBox->value();
+    ui->endTimeBox->setValue(1);
+
+    auto res = integrate();
+    auto plots = res.first;
+
+    RealVector base_der = plots.point(1, false);
+
+    RealVector fp = plots.starting_point();
+
+    std::vector<RealVector> stab_mat;
+    std::vector<double> deviation = {0.001,0.001,-1.,0.001,0.001,0.001};
+    for(size_t i=0; i<deviation.size(); i++){
+        RealVector start = fp;
+        double epsilon = start[i]*deviation[i];
+        start[i] += epsilon;
+
+        auto dev_plots = integrate(start).first;
+
+
+        stab_mat.push_back((dev_plots.point(1, false)-base_der)/epsilon);
+    }
+
+    std::cout << "\nSTABILITY MATRIX\n\n";
+    for(size_t i=0; i<deviation.size(); i++){
+        std::cout<<stab_mat[i]<<'\n';
+    }
+
+    ui->endTimeBox->setValue(end_time);
 }
 
 void MainWindow::reset_axes(){
@@ -300,32 +338,32 @@ void MainWindow::on_fpButton_clicked(){
     double lower = -1;
     double upper = -1;
     while(lower < 0 || upper < 0){
-        double T = ui->TSpinBox->value();
+        double alpha = ui->TSpinBox->value();
         auto p = this->integrate();
 
         bool go_to_lower;
         int phase = p.second;
         if(ui->orderedRadioButton->isChecked()){
-            go_to_lower = (phase <= 1);
+            go_to_lower = (phase == 2);
         } else {
-            go_to_lower = (phase == 0);
+            go_to_lower = (phase != 1);
         }
 
         if(go_to_lower){
-            upper = T;
-            T -= diff;
-            if(T > 4.1*diff){
+            upper = alpha;
+            alpha -= diff;
+            if(alpha > 4.1*diff){
                 diff *=2;
             }
-            while(T <= diff){
+            while(alpha <= diff){
                 diff /= 2;
             }
         } else {
-            lower = T;
-            T += diff;
+            lower = alpha;
+            alpha += diff;
             diff *= 2;
         }
-        ui->TSpinBox->setValue(T);
+        ui->TSpinBox->setValue(alpha);
 
         std::cout<<ui->TSpinBox->value()<<std::endl;
     }
@@ -344,9 +382,9 @@ void MainWindow::on_fpButton_clicked(){
         bool go_to_lower;
         int phase = p.second;
         if(ui->orderedRadioButton->isChecked()){
-            go_to_lower = (phase <= 1);
+            go_to_lower = (phase == 2);
         } else {
-            go_to_lower = (phase == 0);
+            go_to_lower = (phase != 1);
         }
 
 
@@ -427,7 +465,7 @@ double MainWindow::find_fp(RealVector start_point){
     }
     return start_point[5];
 }
-
+/*
 void MainWindow::on_CLButton_clicked()
 {
     double start = ui->tauBox->value();
@@ -500,7 +538,7 @@ void MainWindow::on_CLButton_clicked()
 
     return;
 }
-
+*/
 void MainWindow::on_stopButton_clicked(){
     this->stop = true;
 }
@@ -509,3 +547,4 @@ void MainWindow::on_dimensionBox_valueChanged(double)
 {
     restart_integrator();
 }
+

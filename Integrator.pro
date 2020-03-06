@@ -19,31 +19,31 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 SOURCES += main.cpp \
     integrator.cpp \
-    realvector.cpp \
     mainwindow.cpp \
     qcustomplot.cpp \
     simpson.cpp \
-    equationset.cpp \
-    regulator.cpp \
     physics_cubic.cpp \
     physics_hex.cpp \
     plot.cpp \
     plotset.cpp \
-    qcp_extension.cpp
+    qcp_extension.cpp \
+    regulator.cpp \
+    realvector.cpp \
+    equationset.cpp
 
 HEADERS += \
-    integrator.h \
-    realvector.h \
-    mainwindow.h \
-    qcustomplot.h \
-    equationset.h \
-    regulator.h \
-    physics_cubic.h \
-    physics_hex.h \
     simpson.h \
-    plot.h \
+    regulator.h \
+    realvector.h \
+    qcustomplot.h \
+    qcp_extension.h \
     plotset.h \
-    qcp_extension.h
+    plot.h \
+    physics_hex.h \
+    physics_cubic.h \
+    mainwindow.h \
+    integrator.h \
+    equationset.h
 
 QMAKE_CXXFLAGS += -std=c++14
 
@@ -57,3 +57,8 @@ QMAKE_CXXFLAGS_RELEASE += -O3
 
 FORMS += \
     mainwindow.ui
+
+SUBDIRS += \
+    Integrator.pro
+
+DISTFILES +=

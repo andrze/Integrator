@@ -11,6 +11,8 @@ public:
 
 	void push_to_each(RealVector values, RealVector ders, double t);
 	void pop_from_each();
+    RealVector point(size_t i, bool values=true);
+    RealVector starting_point();
 	RealVector back_vals();
 	RealVector back_ders();
 	double back_time();
@@ -20,10 +22,11 @@ public:
 	size_t plot_number();
 
 	double eta(size_t k);
-	int phase_diagnosis();
+    Plot rescaled(size_t k, double d);
+    int phase_diagnosis(double d=0);
 
 private:
-	std::vector<Plot> plots;
+    std::vector<Plot> plots;
 
 };
 
