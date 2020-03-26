@@ -16,11 +16,11 @@ RealVector EquationSet::evaluate(RealVector point){
     double eta = find_eta(point, d, d_factor);
     std::vector<double> coords;
     coords.push_back(K_der_cubic(point, eta, d, d_factor));
+    coords.push_back(Z_der_cubic(point, eta));
+    coords.push_back(Y_der_cubic(point, eta, d, d_factor));
     coords.push_back(u_der_cubic(point, eta, d, d_factor));
     coords.push_back(l_der_cubic(point, eta, d, d_factor));
     coords.push_back(v_der_cubic(point, eta, d, d_factor));
-    coords.push_back(Y_der_cubic(point, eta, d, d_factor));
-    coords.push_back(Z_der_cubic(point, eta));
     coords.push_back(J_der_cubic(point, eta, d, d_factor));
 
     return RealVector(coords);

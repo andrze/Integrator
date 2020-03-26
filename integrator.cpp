@@ -69,10 +69,10 @@ std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, doub
             bool parameter_jump = false, parameter_changed_sign = false;
             if(std::abs(point[j]) <= std::numeric_limits<double>::epsilon()) continue;
 
-            if(j!=4){
+            if(j!=2){
                 parameter_changed_sign = (signum(new_point[j]) != signum(point[j]));
             }
-            if(j<3){
+            if(j==0||j==3||j==4){
                 parameter_jump =  std::abs(std::log(std::abs(new_point[j]/point[j]))) > 0.2;
             }
             if(parameter_changed_sign || parameter_jump){

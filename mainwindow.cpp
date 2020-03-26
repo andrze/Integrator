@@ -41,9 +41,9 @@ MainWindow::~MainWindow()
 }
 
 std::pair<PlotSet, int> MainWindow::integrate(){
-    std::vector<double> coords({ui->TSpinBox->value(),
+    std::vector<double> coords({ui->TSpinBox->value(),1, ui->YspinBox->value(),
                                 ui->uBox->value(), ui->tauBox->value(),
-                                ui->VspinBox->value(), ui->YspinBox->value(), 1, ui->JspinBox->value()});
+                                ui->VspinBox->value(), ui->JspinBox->value()});
     RealVector start(coords);
 
     return integrator.integrate(ui->startTimeBox->value(),
@@ -165,26 +165,23 @@ void MainWindow::plot_result(PlotSet *res){
     std::array<std::vector<double>, 11> plot_vals;
     std::vector<double> time = p[0].times;
 
-    add_graph(ui->vPlot, time, p[3].abs_values(), true, 2);
+    add_graph(ui->vPlot, time, p[5].abs_values(), true, 2);
     add_graph(ui->vPlot, time, p[6].abs_values(), true, 2);
 
-    plot_vals[0] = p[0].values;             // kappa
-    plot_vals[1] = p[5].values;             // Z
+    plot_vals[0] = p[0].values;           // kappa
+    plot_vals[1] = p[1].values;           // Z
     plot_vals[2] = p.rescaled(0).values;  // alpha^2
 
-    plot_vals[6] = p.rescaled(1).abs_values();      // u
-    plot_vals[7] = p.rescaled(2).abs_values();      // lambda
+    plot_vals[6] = p.rescaled(3).abs_values();      // u
+    plot_vals[7] = p.rescaled(4).abs_values();      // lambda
 
-    std::vector<double> u = p[1].abs_values();
-    std::vector<double> l = p[2].abs_values();
+    std::vector<double> u = p[3].abs_values();
+    std::vector<double> l = p[4].abs_values();
 
     for(size_t i=0; i<p[0].values.size(); i++){
-        plot_vals[4].push_back(u[i]*p[0].values[i]);       // u~
-        plot_vals[5].push_back(l[i]*p[0].values[i]);       // lambda~
-
         plot_vals[3].push_back(p.eta(i));                 // eta
 
-        double y = p[4].values[i];
+        double y = p[2].values[i];
         if(y >= 0){
             plot_vals[8].push_back(y); // y positive part
             plot_vals[9].push_back(0);
@@ -195,16 +192,14 @@ void MainWindow::plot_result(PlotSet *res){
     }
 
 
-    std::vector<QCustomPlot*> composite_plots{ui->kappaPlot, ui->zPlot, ui->alphaPlot};
-    std::vector<bool> logplot{                true,          true,             true};
+    std::vector<QCustomPlot*> composite_plots{ui->kappaPlot, ui->zPlot, ui->alphaPlot, ui->etaPlot};
+    std::vector<bool> logplot{                true,          true,             true, false};
     for(size_t i=0; i<composite_plots.size(); i++){
         add_graph(composite_plots[i], time, plot_vals[i], logplot[i]);
     }
 
-    add_graph(ui->etaPlot, time, plot_vals[3], false, 1);
-
     ui->m2Plot->xAxis->setScaleType(QCPAxis::stLogarithmic);
-    add_graph(ui->m2Plot, p[3].abs_values(), p[6].abs_values(), true, 1);
+    add_graph(ui->m2Plot, p[5].abs_values(), p[6].abs_values(), true, 1);
 
 
     auto m2range = get_x_range(ui->m2Plot);
@@ -212,8 +207,8 @@ void MainWindow::plot_result(PlotSet *res){
     rescale_axes(ui->m2Plot, m2range.lower, m2range.upper, true);
 
 
-    add_graph(ui->uPlot, time, p[1].abs_values(), true, 2);
-    add_graph(ui->uPlot, time, p[2].abs_values(), true, 2);
+    add_graph(ui->uPlot, time, p[3].abs_values(), true, 2);
+    add_graph(ui->uPlot, time, p[4].abs_values(), true, 2);
 
     add_graph(ui->lambdaPlot, time, plot_vals[6], true, 2);
     add_graph(ui->lambdaPlot, time, plot_vals[7], true, 2);
@@ -225,11 +220,11 @@ void MainWindow::plot_result(PlotSet *res){
     add_graph(ui->etaAlphaPlot, plot_vals[0], plot_vals[3]);
     rescale_axes(ui->etaAlphaPlot, 0., 1., false);
 
-    add_graph(ui->uAlphaPlot, plot_vals[0], p[1].abs_values(), true);
+    add_graph(ui->uAlphaPlot, plot_vals[0], p[3].abs_values(), true);
     rescale_axes(ui->uAlphaPlot, 0., 1., true);
 
     ui->ulPlot->xAxis->setScaleType(QCPAxis::stLogarithmic);
-    add_graph(ui->ulPlot, p[1].abs_values(), p[2].abs_values(), true);
+    add_graph(ui->ulPlot, p[3].abs_values(), p[4].abs_values(), true);
     auto range = get_x_range(ui->ulPlot);
     range.upper = std::min(200., range.upper);
 

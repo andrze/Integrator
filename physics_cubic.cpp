@@ -8,13 +8,12 @@
 #include "simpson.h"
 #include "regulator.h"
 
-
 double K_der_cubic(RealVector x, double eta, double d, double d_factor){
     double K = x[0];
-    double u = x[1];
-    double l = x[2];
-    double v = x[3];
-    double Y = x[4];
+    double Y = x[2];
+    double u = x[3];
+    double l = x[4];
+    double v = x[5];
     double J = x[6];
 
     auto integrand = [&](double y){
@@ -34,10 +33,10 @@ double K_der_cubic(RealVector x, double eta, double d, double d_factor){
 
 double u_der_cubic(RealVector x, double eta, double d, double d_factor){
     double K = x[0];
-    double u = x[1];
-    double l = x[2];
-    double v = x[3];
-    double Y = x[4];
+    double Y = x[2];
+    double u = x[3];
+    double l = x[4];
+    double v = x[5];
     double J = x[6];
 
     auto integrand = [&](double y){
@@ -59,9 +58,9 @@ double u_der_cubic(RealVector x, double eta, double d, double d_factor){
 
 double l_der_cubic(RealVector x, double eta, double d, double d_factor){
     double K = x[0];
-    double u = x[1];
-    double l = x[2];
-    double Y = x[4];
+    double Y = x[2];
+    double u = x[3];
+    double l = x[4];
     double J = x[6];
 
     auto integrand = [&](double y)-> double{
@@ -83,10 +82,10 @@ double l_der_cubic(RealVector x, double eta, double d, double d_factor){
 
 double v_der_cubic(RealVector x, double eta, double d, double d_factor){
     double K = x[0];
-    double u = x[1];
-    double l = x[2];
-    double v = x[3];
-    double Y = x[4];
+    double Y = x[2];
+    double u = x[3];
+    double l = x[4];
+    double v = x[5];
     double J = x[6];
 
     auto integrand = [&](double y){
@@ -110,10 +109,10 @@ double v_der_cubic(RealVector x, double eta, double d, double d_factor){
 
 double Y_der_cubic(RealVector x, double eta, double d, double d_factor){
     double K = x[0];
-    double u = x[1];
-    double l = x[2];
-    double v = x[3];
-    double Y = x[4];
+    double Y = x[2];
+    double u = x[3];
+    double l = x[4];
+    double v = x[5];
     double J = x[6];
 
     double V3p = 2*l + u + 2*K*J;
@@ -159,15 +158,15 @@ double Y_der_cubic(RealVector x, double eta, double d, double d_factor){
 }
 
 double Z_der_cubic(RealVector x, double eta){
-    return eta*x[5];
+    return eta*x[1];
 }
 
 double J_der_cubic(RealVector x, double eta, double d, double d_factor){
     double K = x[0];
-    double u = x[1];
-    double l = x[2];
-    double v = x[3];
-    double Y = x[4];
+    double Y = x[2];
+    double u = x[3];
+    double l = x[4];
+    double v = x[5];
     double J = x[6];
 
     auto integrand = [&](double y){
@@ -195,9 +194,9 @@ double J_der_cubic(RealVector x, double eta, double d, double d_factor){
 
 double find_eta(RealVector x, double d, double d_factor){
     double K = x[0];
-    double u = x[1];
-    double l = x[2];
-    double Y = x[4];
+    double Y = x[2];
+    double u = x[3];
+    double l = x[4];
     double J = x[6];
 
     auto integrand = [&](double y){

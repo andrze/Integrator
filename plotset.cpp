@@ -93,7 +93,7 @@ size_t PlotSet::plot_number(){
 }
 
 double PlotSet::eta(size_t k){
-    return plots[5].log_der(k);
+    return plots[1].log_der(k);
 }
 
 std::pair<double,double> PlotSet::rescaled(size_t plot, size_t pos){
@@ -109,8 +109,8 @@ std::pair<double,double> PlotSet::rescaled(size_t plot, size_t pos){
         throw std::invalid_argument("Rescaled position out of plot scope");
     }
 
-    double Z = plots[5].values[pos];
-    double eta = plots[5].log_der(pos);
+    double Z = plots[1].values[pos];
+    double eta = plots[1].log_der(pos);
 
     Plot rescaled_plot = plots[plot];
     double time = rescaled_plot.times[pos];
@@ -120,13 +120,13 @@ std::pair<double,double> PlotSet::rescaled(size_t plot, size_t pos){
     if(plot==0){ // Rescaling for kappa
         scaling = Z*std::exp(time*(-d+2));
         scaling_der = scaling*(-d+2-eta);
-    } else if(plot==1 || plot==2){ // Rescaling for u and lambda
+    } else if(plot==3 || plot==4){ // Rescaling for u and lambda
         scaling = std::pow(Z,-2)*std::exp(time*(d-4));
         scaling_der = scaling*(d-4+2*eta);
-    } else if(plot==3 || plot==6){ // Rescaling for v and J
+    } else if(plot==5 || plot==6){ // Rescaling for v and J
         scaling = std::pow(Z,-3)*std::exp(time*(2*d-6));
         scaling_der = scaling*(2*d-6+3*eta);
-    } else if(plot==4){  // Rescaling for Y
+    } else if(plot==2){  // Rescaling for Y
         scaling = std::pow(Z,-2)*std::exp(time*(d-2));
         scaling_der = scaling*(d-2+2*eta);
     } else { // Rescaling for Z
@@ -180,9 +180,9 @@ int PlotSet::phase_diagnosis(){
 
         for(size_t j=0; j<plot_number(); j++){
             auto rescaling = rescaled(j, i);
-            if(j==5) continue;
+            if(j==1) continue;
             if(rescaling.first < std::numeric_limits<double>::epsilon()) continue;
-            if(j>0 && std::abs(plots[2].values.front()) < std::numeric_limits<double>::epsilon()) continue;
+            if(j>0 && std::abs(plots[4].values.front()) < std::numeric_limits<double>::epsilon()) continue;
 
             double log_der = std::abs(rescaling.second/rescaling.first);
             if(log_der>1e-04){
