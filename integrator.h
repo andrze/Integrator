@@ -17,6 +17,7 @@ public:
 
 private:
     RealVector rk4(double t, PlotSet* plots);
+    double d;
 
 };
 

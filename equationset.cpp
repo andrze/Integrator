@@ -1,38 +1,29 @@
 #include "equationset.h"
 #include "physics_cubic.h"
-#include "physics_hex.h"
 #include <cmath>
+#include <iostream>
 
 EquationSet::EquationSet(bool cubic, double dimension)
 {
     this->cubic = cubic;
     this->d = dimension;
-    d_factor = 2/d*std::pow(M_PI, dimension/2)*std::pow(2*M_PI,-d)/std::tgamma(dimension/2);
+    d_factor = std::pow(2, -1-dimension)*std::pow(M_PI,-d/2)/std::tgamma(dimension/2);
 }
 
-RealVector EquationSet::evaluate(RealVector point, double L){
-    if(cubic){
-        double zp_der = Zp_der_cubic(point, L, d, d_factor);
-        std::vector<double> coords;
-        coords.push_back(A_der_cubic(point, L, zp_der, d, d_factor));
-        coords.push_back(Ms_der_cubic(point, L, zp_der, d, d_factor));
-        coords.push_back(Mp_der_cubic(point, L, zp_der, d, d_factor));
-        coords.push_back(Zs_der_cubic(point, L, zp_der, d, d_factor));
-        coords.push_back(zp_der);
-        coords.push_back(0.);
+RealVector EquationSet::evaluate(RealVector point){
+    //if(cubic){
 
-        return RealVector(coords);
+    double eta = find_eta(point, d, d_factor);
+    std::vector<double> coords;
+    coords.push_back(K_der_cubic(point, eta, d, d_factor));
+    coords.push_back(u_der_cubic(point, eta, d, d_factor));
+    coords.push_back(l_der_cubic(point, eta, d, d_factor));
+    coords.push_back(v_der_cubic(point, eta, d, d_factor));
+    coords.push_back(Y_der_cubic(point, eta, d, d_factor));
+    coords.push_back(Z_der_cubic(point, eta));
+    coords.push_back(J_der_cubic(point, eta, d, d_factor));
 
-    } else {
-    	double zp_der = Zp_der_hex(point, L, d, d_factor);
-		std::vector<double> coords;
-		coords.push_back(A_der_hex(point, L, zp_der, d, d_factor));
-		coords.push_back(Ms_der_hex(point, L, zp_der, d, d_factor));
-		coords.push_back(Mp_der_hex(point, L, zp_der, d, d_factor));
-		coords.push_back(Zs_der_hex(point, L, zp_der, d, d_factor));
-		coords.push_back(zp_der);
-		coords.push_back(0.);
+    return RealVector(coords);
 
-		return RealVector(coords);
-    }
+    //}
 }

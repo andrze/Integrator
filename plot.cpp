@@ -24,11 +24,19 @@ size_t Plot::size(){
 	return size;
 }
 
-double Plot::exp_time_log_der(size_t k){
+double Plot::log_der(size_t k){
 	if(k >= size()){
 		throw std::invalid_argument("Argument k out of plot range");
 	}
-	return -times[k]*derivatives[k]/values[k];
+    return derivatives[k]/values[k];
+}
+
+std::vector<double> Plot::abs_values(){
+    std::vector<double> abs_vals;
+    for(auto&& v: values){
+        abs_vals.push_back(std::abs(v));
+    }
+    return abs_vals;
 }
 
 std::array<double, 3> Plot::operator[](size_t k){

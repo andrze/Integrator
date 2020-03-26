@@ -23,10 +23,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    plots = std::vector<QCustomPlot*>{ui->alphaPlot, ui->mPlot, ui->kappaPlot, ui->zPlot, ui->universalPlot,
-                ui->uPlot, ui->yPlot, ui->m2Plot, ui->etaPlot,};
+    plots = std::vector<QCustomPlot*>{ui->alphaPlot, ui->lambdaPlot, ui->kappaPlot, ui->vPlot, ui->zPlot,
+                ui->uPlot, ui->yPlot, ui->etaPlot,};
 
-    is_plot_log = std::vector<bool>{true, true, true, true, false, true, true, true, false};
+    is_plot_log = std::vector<bool>{true, true, true, true, false, true, true, false};
 
     EquationSet equations(ui->cubicRadioButton->isChecked(), ui->dimensionBox->value());
     integrator = Integrator(equations);
@@ -41,23 +41,21 @@ MainWindow::~MainWindow()
 }
 
 std::pair<PlotSet, int> MainWindow::integrate(){
-    double kappa = ui->TSpinBox->value()*ui->TSpinBox->value();
     std::vector<double> coords({ui->TSpinBox->value(),
-                                ui->uBox->value()*kappa, ui->tauBox->value()*kappa,
-                                1, 1+kappa*ui->YspinBox->value(),
-                                1});
+                                ui->uBox->value(), ui->tauBox->value(),
+                                ui->VspinBox->value(), ui->YspinBox->value(), 1, ui->JspinBox->value()});
     RealVector start(coords);
 
-    return integrator.integrate(exp(-ui->startTimeBox->value()),
-                                exp(-ui->endTimeBox->value()),
+    return integrator.integrate(ui->startTimeBox->value(),
+                                ui->endTimeBox->value(),
                                 ui->deltaTBox->value(),
                                 start);
 }
 
 std::pair<PlotSet, int> MainWindow::integrate(RealVector start_point){
 
-    return integrator.integrate(exp(-ui->startTimeBox->value()),
-                                exp(-ui->endTimeBox->value()),
+    return integrator.integrate(ui->startTimeBox->value(),
+                                ui->endTimeBox->value(),
                                 ui->deltaTBox->value(),
                                 start_point);
 }
@@ -85,7 +83,7 @@ void MainWindow::on_saveButton_clicked(){
     file<<std::setprecision(10);
     //file<<std::setprecision(std::numeric_limits<long double>::digits10 + 1);
 
-    std::vector<std::string> headers{"s", "Alpha", "Sigma Mass", "Pi Mass", "Z Sigma", "Z Pi", "T", "Eta"};
+    std::vector<std::string> headers{"s", "Kappa", "u", "l", "v", "Y", "Z", "J", "Eta"};
 
     for(size_t j=0; j<results.size(); j++){
         for(size_t i=0; i<headers.size(); i++){
@@ -102,13 +100,14 @@ void MainWindow::on_saveButton_clicked(){
 
     for(size_t k=0; k<max_length; k++){
         for(size_t i=0; i<results.size(); i++){
-            if(k < results[i].plot_size()){
-                file << results[i][0].times[k] << ',';
-                for(size_t j=0; j<results[i].plot_number(); j++){
+            auto res = results[i];
+            if(k < res.plot_size()){
+                file << res[0].times[k] << ',';
+                for(size_t j=0; j<res.plot_number(); j++){
 
-                    file << results[i][j].values[k] << ',';
+                    file << res[j].values[k] << ',';
                 }
-                file << (-exp(-results[i][4].times[k])*results[i][4].derivatives[k]/results[i][4].values[k])<< ',';
+                file << res[5].derivatives[i]/res[5].values[i]<< ',';
             } else {
                 for(size_t j=0; j<results[i].plot_number()+2; j++){
                     file << ',';
@@ -164,41 +163,28 @@ void MainWindow::on_pushButton_clicked(){
 void MainWindow::plot_result(PlotSet *res){
     auto p = *res;
     std::array<std::vector<double>, 11> plot_vals;
-    std::vector<double> time, log_time;
-    for(auto t: p[0].times){
-        time.push_back(t);
-        log_time.push_back(-log(t));
-    }
-    double d = ui->dimensionBox->value();
+    std::vector<double> time = p[0].times;
 
-    if(p[2].values[0] > 0){
-        add_graph(ui->mPlot, log_time, p[1].values, true, 2);
-        add_graph(ui->mPlot, log_time, p[2].values, true, 2);
-    } else {
-        add_graph(ui->mPlot, log_time, p[1].values, true, 1);
-    }
-    add_graph(ui->zPlot, log_time, p[3].values, true, 2);
-    add_graph(ui->zPlot, log_time, p[4].values, true, 2);
+    add_graph(ui->vPlot, time, p[3].abs_values(), true, 2);
+    add_graph(ui->vPlot, time, p[6].abs_values(), true, 2);
 
-    Plot kappa = p.rescaled(0,d);
-    Plot u = p.rescaled(1,d);
-    Plot lambda = p.rescaled(2,d);
+    plot_vals[0] = p[0].values;             // kappa
+    plot_vals[1] = p[5].values;             // Z
+    plot_vals[2] = p.rescaled(0).values;  // alpha^2
+
+    plot_vals[6] = p.rescaled(1).abs_values();      // u
+    plot_vals[7] = p.rescaled(2).abs_values();      // lambda
+
+    std::vector<double> u = p[1].abs_values();
+    std::vector<double> l = p[2].abs_values();
 
     for(size_t i=0; i<p[0].values.size(); i++){
-        double a2 = std::pow(p[0].values[i],2);
-        double kappa_i = kappa.values[i]*kappa.values[i];
-        double u_i = u.values[i];
-        double l_i = lambda.values[i];
+        plot_vals[4].push_back(u[i]*p[0].values[i]);       // u~
+        plot_vals[5].push_back(l[i]*p[0].values[i]);       // lambda~
 
-        plot_vals[0].push_back(kappa_i);                                                          // kappa
-        plot_vals[1].push_back(p.eta(i)*kappa_i/p[5].values[i]);                                  // J eta / T
-        plot_vals[2].push_back(a2);                                                             // alpha^2
-        plot_vals[3].push_back(p.eta(i));                                                       // eta
-        plot_vals[4].push_back(u_i/kappa_i); // u~
-        plot_vals[5].push_back(l_i/kappa_i); // lambda~
-        plot_vals[6].push_back(u_i); // m sigma~
-        plot_vals[7].push_back(l_i); // m pi~
-        double y = p[5].values[i]*(p[3].values[i]/p[4].values[i]-1)/kappa_i;
+        plot_vals[3].push_back(p.eta(i));                 // eta
+
+        double y = p[4].values[i];
         if(y >= 0){
             plot_vals[8].push_back(y); // y positive part
             plot_vals[9].push_back(0);
@@ -206,48 +192,53 @@ void MainWindow::plot_result(PlotSet *res){
             plot_vals[8].push_back(0);
             plot_vals[9].push_back(-y); // y negative part
         }
-        plot_vals[10].push_back(p[3].exp_time_log_der(i)); //eta sigma
     }
 
-    std::vector<QCustomPlot*> composite_plots{ui->kappaPlot, ui->universalPlot, ui->alphaPlot};
-    std::vector<bool> logplot{                true,          false,             true};
+
+    std::vector<QCustomPlot*> composite_plots{ui->kappaPlot, ui->zPlot, ui->alphaPlot};
+    std::vector<bool> logplot{                true,          true,             true};
     for(size_t i=0; i<composite_plots.size(); i++){
-        add_graph(composite_plots[i], log_time, plot_vals[i], logplot[i]);
+        add_graph(composite_plots[i], time, plot_vals[i], logplot[i]);
     }
 
-    add_graph(ui->etaPlot, log_time, plot_vals[10], false, 2);
-    add_graph(ui->etaPlot, log_time, plot_vals[3], false, 2);
+    add_graph(ui->etaPlot, time, plot_vals[3], false, 1);
 
-    add_graph(ui->m2Plot, log_time, plot_vals[6], true, 2);
-    add_graph(ui->m2Plot, log_time, plot_vals[7], true, 2);
-
-    if(plot_vals[5][0] > 0){
-        add_graph(ui->uPlot, log_time, plot_vals[4], true, 2);
-        add_graph(ui->uPlot, log_time, plot_vals[5], true, 2);
-    } else {
-        add_graph(ui->uPlot, log_time, plot_vals[4], true, 1);
-    }
-
-    add_graph(ui->yPlot, log_time, plot_vals[9], true, 2);
-    add_graph(ui->yPlot, log_time, plot_vals[8], true, 2);
+    ui->m2Plot->xAxis->setScaleType(QCPAxis::stLogarithmic);
+    add_graph(ui->m2Plot, p[3].abs_values(), p[6].abs_values(), true, 1);
 
 
-    add_graph(ui->etaAlphaPlot, plot_vals[0], plot_vals[1]);
+    auto m2range = get_x_range(ui->m2Plot);
+    m2range.upper = std::min(200., m2range.upper);
+    rescale_axes(ui->m2Plot, m2range.lower, m2range.upper, true);
+
+
+    add_graph(ui->uPlot, time, p[1].abs_values(), true, 2);
+    add_graph(ui->uPlot, time, p[2].abs_values(), true, 2);
+
+    add_graph(ui->lambdaPlot, time, plot_vals[6], true, 2);
+    add_graph(ui->lambdaPlot, time, plot_vals[7], true, 2);
+
+    add_graph(ui->yPlot, time, plot_vals[8], true, 2);
+    add_graph(ui->yPlot, time, plot_vals[9], true, 2);
+
+
+    add_graph(ui->etaAlphaPlot, plot_vals[0], plot_vals[3]);
     rescale_axes(ui->etaAlphaPlot, 0., 1., false);
 
-    add_graph(ui->uAlphaPlot, plot_vals[0], plot_vals[4], true);
+    add_graph(ui->uAlphaPlot, plot_vals[0], p[1].abs_values(), true);
     rescale_axes(ui->uAlphaPlot, 0., 1., true);
 
     ui->ulPlot->xAxis->setScaleType(QCPAxis::stLogarithmic);
-    add_graph(ui->ulPlot, plot_vals[4], plot_vals[5], true);
+    add_graph(ui->ulPlot, p[1].abs_values(), p[2].abs_values(), true);
     auto range = get_x_range(ui->ulPlot);
     range.upper = std::min(200., range.upper);
 
     rescale_axes(ui->ulPlot, range.lower, range.upper, true);
 
-    QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
-    ui->ulPlot->xAxis->setTicker(logTicker);
 
+    QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog),logTicker2(new QCPAxisTickerLog);
+    ui->m2Plot->xAxis->setTicker(logTicker);
+    ui->ulPlot->xAxis->setTicker(logTicker2);
 
     reset_axes();
     std::cout<<"\a"<<std::flush;
@@ -258,6 +249,7 @@ void MainWindow::on_clearButton_clicked(){
     plots2.push_back(ui->etaAlphaPlot);
     plots2.push_back(ui->uAlphaPlot);
     plots2.push_back(ui->ulPlot);
+    plots2.push_back(ui->m2Plot);
     for(auto&& p: plots2){
         p->clearPlottables();
         p->replot();

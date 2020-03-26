@@ -3,13 +3,14 @@
 
 #include "realvector.h"
 #include "plot.h"
+#include "equationset.h"
 
 class PlotSet {
 public:
-	PlotSet(size_t i=0);
+    PlotSet(size_t size, double d);
 	virtual ~PlotSet();
 
-	void push_to_each(RealVector values, RealVector ders, double t);
+    void push_to_each(RealVector values, RealVector ders, double t);
 	void pop_from_each();
     RealVector point(size_t i, bool values=true);
     RealVector starting_point();
@@ -22,11 +23,13 @@ public:
 	size_t plot_number();
 
 	double eta(size_t k);
-    Plot rescaled(size_t k, double d);
-    int phase_diagnosis(double d=0);
+    std::pair<double,double> rescaled(size_t plot, size_t pos);
+    Plot rescaled(size_t k);
+    int phase_diagnosis();
 
 private:
     std::vector<Plot> plots;
+    double d;
 
 };
 

@@ -11,10 +11,11 @@
 #include <cmath>
 #include <iostream>
 
-PlotSet::PlotSet(size_t i) {
-	for(size_t j=0; j<i; j++){
+PlotSet::PlotSet(size_t size, double d) {
+    for(size_t j=0; j<size; j++){
 		plots.push_back(Plot());
 	}
+    this->d = d;
 }
 
 PlotSet::~PlotSet() {
@@ -92,11 +93,11 @@ size_t PlotSet::plot_number(){
 }
 
 double PlotSet::eta(size_t k){
-    return plots[4].exp_time_log_der(k);
+    return plots[5].log_der(k);
 }
 
-Plot PlotSet::rescaled(size_t k, double d){
-    if(k > this->plot_number()){
+std::pair<double,double> PlotSet::rescaled(size_t plot, size_t pos){
+    if(plot > this->plot_number()){
         throw std::invalid_argument("Argument larger than number of plots");
     }
 
@@ -104,52 +105,95 @@ Plot PlotSet::rescaled(size_t k, double d){
         throw std::invalid_argument("Not enough plots to allow rescaling");
     }
 
-    Plot rescaled;
-    rescaled.times = this->plots[k].times;
-    for(size_t i=0; i<this->plot_size(); i++){
-        double Z = this->plots[4].values[i];
-        double T = this->plots[5].values[i];
-        double scaling = 1;
-        if(k==0){
-            scaling = std::sqrt(Z)*std::pow(rescaled.times[i],(2-d)/2)/sqrt(T);
-        } else if(k==1 || k==2){
-            scaling = T/(Z*rescaled.times[i]*rescaled.times[i]);
-        }
-
-        rescaled.values.push_back(this->plots[k].values[i]*scaling);
-        rescaled.derivatives.push_back(this->plots[k].derivatives[i]*scaling);
+    if(pos >= plots[plot].size()){
+        throw std::invalid_argument("Rescaled position out of plot scope");
     }
 
-    return rescaled;
+    double Z = plots[5].values[pos];
+    double eta = plots[5].log_der(pos);
+
+    Plot rescaled_plot = plots[plot];
+    double time = rescaled_plot.times[pos];
+    double scaling=1;
+    double scaling_der=0;
+
+    if(plot==0){ // Rescaling for kappa
+        scaling = Z*std::exp(time*(-d+2));
+        scaling_der = scaling*(-d+2-eta);
+    } else if(plot==1 || plot==2){ // Rescaling for u and lambda
+        scaling = std::pow(Z,-2)*std::exp(time*(d-4));
+        scaling_der = scaling*(d-4+2*eta);
+    } else if(plot==3 || plot==6){ // Rescaling for v and J
+        scaling = std::pow(Z,-3)*std::exp(time*(2*d-6));
+        scaling_der = scaling*(2*d-6+3*eta);
+    } else if(plot==4){  // Rescaling for Y
+        scaling = std::pow(Z,-2)*std::exp(time*(d-2));
+        scaling_der = scaling*(d-2+2*eta);
+    } else { // Rescaling for Z
+        scaling = 1/Z;
+        scaling_der = -eta*scaling;
+    }
+    double val = rescaled_plot.values[pos]*scaling;
+    double der = rescaled_plot.derivatives[pos]*scaling+rescaled_plot.values[pos]*scaling_der;
+    return std::make_pair(val, der);
 }
 
-int PlotSet::phase_diagnosis(double d){
-	size_t plot_size = this->plot_size();
-	size_t start = plot_size-10;
-	if(plot_size < 11){
+Plot PlotSet::rescaled(size_t plot){
+    if(plot > this->plot_number()){
+        throw std::invalid_argument("Argument larger than number of plots");
+    }
+
+    if(this->plot_number() < 5){
+        throw std::invalid_argument("Not enough plots to allow rescaling");
+    }
+
+
+    Plot rescaled_plot;
+    rescaled_plot.times = this->plots[plot].times;
+    for(size_t i=0; i<this->plot_size(); i++){
+        std::pair<double, double> rescaled_point = rescaled(plot, i);
+
+        rescaled_plot.values.push_back(rescaled_point.first);
+        rescaled_plot.derivatives.push_back(rescaled_point.second);
+    }
+
+    return rescaled_plot;
+}
+
+int PlotSet::phase_diagnosis(){
+    size_t plot_size = this->plot_size();
+
+    size_t start, end;
+    if(plot_size < 21){
 		start = 1;
-	}
-    for(size_t i=start; i<plot_size; i++){
-        if(std::abs(plots[0].exp_time_log_der(i)) < 1e-04 && (plots[2].values.back()==0. || std::abs(plots[1].exp_time_log_der(i)) < 1e-04 )){
-            //if(plots[0].values[i] > 1e-0{
+    } else {
+        start = plot_size-20;
+    }
+    if(plot_size < 11){
+        end = 0;
+    } else {
+        end = plot_size-10;
+    }
+
+    for(size_t i=start; i<end; i++){
+        bool ordered = true;
+
+        for(size_t j=0; j<plot_number(); j++){
+            auto rescaling = rescaled(j, i);
+            if(j==5) continue;
+            if(rescaling.first < std::numeric_limits<double>::epsilon()) continue;
+            if(j>0 && std::abs(plots[2].values.front()) < std::numeric_limits<double>::epsilon()) continue;
+
+            double log_der = std::abs(rescaling.second/rescaling.first);
+            if(log_der>1e-04){
+                ordered = false;
+            }
+
+        }
+        if(ordered){
             return 2;
         }
     }
-
-    auto alpha = this->rescaled(0,d);
-    auto mpi = this->rescaled(2,d);
-
-    /*if(d!=0 && mpi.values[1]/(alpha.values[1]*alpha.values[1]) < mpi.values[0]/(alpha.values[0]*alpha.values[0])){
-        return 1;
-    }*/
-
-    for(size_t i=0; i<plot_size; i++){
-        double k = std::pow(plots[0].values[i],2)*plots[4].values[i];
-        if(k > 0.02 && eta(i) > 0.265){
-            return 1;
-        }
-    }
-
     return 0;
 }
 

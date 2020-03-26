@@ -4,8 +4,8 @@
 #include <limits>
 
 
-static std::vector<QPen> color{QPen(Qt::blue), QPen(Qt::red), QPen(Qt::green),
-                               QPen(Qt::darkYellow), QPen(Qt::darkMagenta), QPen(Qt::cyan)};
+static std::vector<QPen> color{QPen(Qt::blue), QPen(Qt::red), QPen(Qt::darkGreen),
+                               QPen(Qt::darkYellow), QPen(Qt::darkMagenta), QPen(Qt::darkCyan)};
 
 QCPRange get_x_range(QCustomPlot* plot){
     double mini = +std::numeric_limits<double>::infinity();
@@ -25,12 +25,10 @@ QCPRange get_x_range(QCustomPlot* plot){
     return QCPRange(mini, maxi);
 }
 
+std::pair<double, double> get_val_range(QCustomPlot* plot, double x_lower, double x_upper, bool logplot){
 
-void rescale_axes(QCustomPlot* plot, double x_lower, double x_upper, bool logplot){
     double mini = +std::numeric_limits<double>::infinity();
     double maxi = -std::numeric_limits<double>::infinity();
-
-    bool found_any = false;
 
     auto key_range = QCPRange(x_lower, x_upper);
     for(int i=0; i<plot->plottableCount(); i++){
@@ -46,10 +44,21 @@ void rescale_axes(QCustomPlot* plot, double x_lower, double x_upper, bool logplo
             mini = std::min(mini, range.lower);
             maxi = std::max(maxi, range.upper);
         }
-        found_any = found_range || found_any;
     }
 
-    plot->xAxis->setRange(key_range);
+    return std::make_pair(mini,maxi);
+}
+
+
+void rescale_axes(QCustomPlot* plot, double x_lower, double x_upper, bool logplot){
+    auto range = get_val_range(plot, x_lower, x_upper, logplot);
+
+    double mini = range.first;
+    double maxi = range.second;
+
+    bool found_any = (mini < std::numeric_limits<double>::infinity()
+            && maxi >-std::numeric_limits<double>::infinity());
+    plot->xAxis->setRange(QCPRange(x_lower,x_upper));
     if(found_any){
         double margin = 0.2;
         double relative_margin;
@@ -70,6 +79,17 @@ void rescale_axes(QCustomPlot* plot, double x_lower, double x_upper, bool logplo
     plot->replot();
 }
 
+void rescale_axes(QCustomPlot* plot, std::pair<double,double> x_range, std::pair<double,double> y_range, bool logplot){
+    plot->xAxis->setRange(x_range.first,x_range.second);
+    plot->yAxis->setRange(y_range.first,y_range.second);
+
+    if(logplot){
+        QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
+        plot->xAxis->setTicker(logTicker);
+        plot->yAxis->setTicker(logTicker);
+    }
+    plot->replot();
+}
 
 void add_graph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double> vals,
               bool logplot, int parts){
@@ -100,7 +120,7 @@ void add_graph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double>
     auto pen = color[size_t(graph_num/parts)];
     pen.setStyle(Qt::SolidLine);
     curve->setPen(pen);
-    if(parts>1 && graph_num%2 == 0){
+    if(parts>1 && graph_num%2 == 1){
         auto pen = curve->pen();
         pen.setStyle(Qt::DotLine);
         curve->setPen(pen);

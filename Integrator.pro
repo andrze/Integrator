@@ -23,7 +23,6 @@ SOURCES += main.cpp \
     qcustomplot.cpp \
     simpson.cpp \
     physics_cubic.cpp \
-    physics_hex.cpp \
     plot.cpp \
     plotset.cpp \
     qcp_extension.cpp \
@@ -39,7 +38,6 @@ HEADERS += \
     qcp_extension.h \
     plotset.h \
     plot.h \
-    physics_hex.h \
     physics_cubic.h \
     mainwindow.h \
     integrator.h \

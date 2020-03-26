@@ -21,7 +21,8 @@ public:
     std::vector<double> times;
 
     size_t size();
-    double exp_time_log_der(size_t k);
+    double log_der(size_t k);
+    std::vector<double> abs_values();
     std::array<double, 3> operator[](size_t k);
 };
 

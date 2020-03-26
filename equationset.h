@@ -13,6 +13,6 @@ public:
     double d;
     double d_factor;
 
-    RealVector evaluate(RealVector point, double L);
+    RealVector evaluate(RealVector point);
 };
 #endif // EQUATIONSET_H
