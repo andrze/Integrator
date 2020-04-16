@@ -53,6 +53,46 @@ PlotSet Integrator::integrate(double start_t, double end_t, double delta_t,
         auto ders = equations.evaluate(point);
         plots.push_to_each(point, ders, t);
 
+        RealVector new_point = this->rk4(delta_t, &plots);
+        if(new_point[0] <= 0.){
+            plots.phase=0;
+            return plots;
+        }
+
+        bool discontinuity = false;
+        for(size_t j=0; j<point.coords.size(); j++){
+            bool parameter_jump = false, parameter_changed_sign = false;
+            if(std::abs(point[j]) <= std::numeric_limits<double>::epsilon()) continue;
+
+            if(j==3){
+                parameter_changed_sign = (signum(new_point[j]) != signum(point[j]));
+            }
+            if(j==0||j==3||j==5){
+                parameter_jump =  std::abs(std::log(std::abs(new_point[j]/point[j]))) > 0.5;
+            }
+            if(parameter_changed_sign || parameter_jump){
+                discontinuity = true;
+            }
+        }
+        if(discontinuity){
+            plots.pop_from_each();
+            if(delta_t<100*std::numeric_limits<double>::epsilon()){
+                auto rescaled_kappa = plots.rescaled(0, size_t(n_steps-1));
+                double log_der = std::abs(rescaled_kappa.second/rescaled_kappa.first);
+                if(std::abs(log_der)>0.1){
+                    plots.phase = 0;
+                    std::cout<<"Zakończono w fazie nieuporządkowanej (nieciągłość kappa)\n";
+                } else {
+                    plots.phase = 2;
+                    std::cout<<"Zakończono w fazie uporządkowanej (nieciągłość potencjału)\n";
+                }
+                return plots;
+            }
+            delta_t /= 2.;
+            continue;
+        }
+
+        old_t = t;
         t = old_t + delta_t;
 
         if( static_cast<int>(t) != static_cast<int>(old_t)){
@@ -60,52 +100,6 @@ PlotSet Integrator::integrate(double start_t, double end_t, double delta_t,
                 scan->back().push_to_each(plots.back_vals(), plots.back_ders(), plots.back_time());
             }
         }
-
-        RealVector new_point = this->rk4(delta_t, &plots);
-
-        bool end=false;
-        std::set<size_t> end_points;
-        for(size_t j=0; j<point.coords.size(); j++){
-            bool parameter_jump = false, parameter_changed_sign = false;
-            if(std::abs(point[j]) <= std::numeric_limits<double>::epsilon()) continue;
-
-            if(j==1||j==3){
-                parameter_changed_sign = (signum(new_point[j]) != signum(point[j]));
-            }
-            if(j==0||j==3||j==5){
-                parameter_jump =  std::abs(std::log(std::abs(new_point[j]/point[j]))) > 1;
-            }
-            if(parameter_changed_sign || parameter_jump){
-                end_points.insert(j);
-                end=true;
-            }
-
-        }
-        if(plots.plot_size() > 1){
-            double eta_k1 = plots.eta(plots.plot_size()-2);
-            double eta_k = plots.eta(plots.plot_size()-1);
-            if(eta_k < -0.01 || eta_k - eta_k1 > 0.15){
-                end = true;
-                end_points.insert(point.coords.size());
-            }
-        }
-        if(end){
-            plots.pop_from_each();
-
-            std::cout<<"Zakończono w punkcie "<<point;
-            if(plots.plot_size()>0){
-                std::cout<<", "<< plots.eta(plots.plot_size()-1);
-            }
-            std::cout << " na wartościach ";
-
-            for(auto p: end_points){
-                std::cout<<p<<", ";
-            }
-            std::cout<<std::endl;
-            plots.phase = plots.phase_diagnosis();
-            return plots;
-        }
-        old_t = t;
 
         point = new_point;
         n_steps++;
