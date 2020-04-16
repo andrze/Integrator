@@ -11,10 +11,14 @@
 #include <cmath>
 #include <iostream>
 
+PlotSet::PlotSet() {
+    d=-1;
+}
+
 PlotSet::PlotSet(size_t size, double d) {
     for(size_t j=0; j<size; j++){
-		plots.push_back(Plot());
-	}
+        plots.push_back(Plot());
+    }
     this->d = d;
 }
 
@@ -22,19 +26,19 @@ PlotSet::~PlotSet() {
 }
 
 void PlotSet::push_to_each(RealVector values, RealVector ders, double t){
-	for(size_t i=0; i<plots.size(); i++){
-		plots[i].values.push_back(values[i]);
-		plots[i].derivatives.push_back(ders[i]);
-		plots[i].times.push_back(t);
-	}
+    for(size_t i=0; i<plots.size(); i++){
+        plots[i].values.push_back(values[i]);
+        plots[i].derivatives.push_back(ders[i]);
+        plots[i].times.push_back(t);
+    }
 }
 
 void PlotSet::pop_from_each(){
-	for(size_t i=0; i<plots.size(); i++){
-		plots[i].values.pop_back();
-		plots[i].derivatives.pop_back();
-		plots[i].times.pop_back();
-	}
+    for(size_t i=0; i<plots.size(); i++){
+        plots[i].values.pop_back();
+        plots[i].derivatives.pop_back();
+        plots[i].times.pop_back();
+    }
 }
 
 RealVector PlotSet::point(size_t i, bool values){
@@ -63,37 +67,47 @@ RealVector PlotSet::back_ders(){
 }
 
 double PlotSet::back_time(){
-	double t=plots[0].times.back();
-	double precision = t*std::numeric_limits<double>::epsilon();
-	for(size_t i=1; i<plots.size(); i++){
-		if(std::abs(t - plots[i].times.back()) > precision){
-			throw std::invalid_argument("Simulation time different in plots on same level");
-		}
-	}
-	return t;
+    double t=plots[0].times.back();
+    double precision = t*std::numeric_limits<double>::epsilon();
+    for(size_t i=1; i<plots.size(); i++){
+        if(std::abs(t - plots[i].times.back()) > precision){
+            throw std::invalid_argument("Simulation time different in plots on same level");
+        }
+    }
+    return t;
 }
 
 size_t PlotSet::plot_size(){
-	size_t size = plots[0].size();
-	for(size_t i=1; i<plots.size(); i++){
-		if(plots[i].size() != size){
-			throw std::invalid_argument("Sizes of plots in PlotSet differ");
-		}
-	}
-	return size;
+    size_t size = plots[0].size();
+    for(size_t i=1; i<plots.size(); i++){
+        if(plots[i].size() != size){
+            throw std::invalid_argument("Sizes of plots in PlotSet differ");
+        }
+    }
+    return size;
 }
 
 Plot& PlotSet::operator[](size_t i){
 
-	return plots[i];
+    return plots[i];
 }
 
 size_t PlotSet::plot_number(){
-	return plots.size();
+    return plots.size();
 }
 
 double PlotSet::eta(size_t k){
     return plots[1].log_der(k);
+}
+
+std::vector<double> PlotSet::eta_plot(){
+    std::vector<double> eta_vals;
+
+    for(size_t k=0; k<plot_size(); k++){
+        eta_vals.push_back(eta(k));
+    }
+
+    return eta_vals;
 }
 
 std::pair<double,double> PlotSet::rescaled(size_t plot, size_t pos){
@@ -120,15 +134,18 @@ std::pair<double,double> PlotSet::rescaled(size_t plot, size_t pos){
     if(plot==0){ // Rescaling for kappa
         scaling = Z*std::exp(time*(-d+2));
         scaling_der = scaling*(-d+2-eta);
+    } else if(plot==2){  // Rescaling for Y
+        scaling = std::pow(Z,-2)*std::exp(time*(d-2));
+        scaling_der = scaling*(d-2+2*eta);
     } else if(plot==3 || plot==4){ // Rescaling for u and lambda
         scaling = std::pow(Z,-2)*std::exp(time*(d-4));
         scaling_der = scaling*(d-4+2*eta);
     } else if(plot==5 || plot==6){ // Rescaling for v and J
         scaling = std::pow(Z,-3)*std::exp(time*(2*d-6));
         scaling_der = scaling*(2*d-6+3*eta);
-    } else if(plot==2){  // Rescaling for Y
-        scaling = std::pow(Z,-2)*std::exp(time*(d-2));
-        scaling_der = scaling*(d-2+2*eta);
+    } else if(plot==7 || plot==8 || plot==9){ // Rescaling for u40, u21 and u02
+        scaling = std::pow(Z,-4)*std::exp(time*(3*d-8));
+        scaling_der = scaling*(3*d-8+4*eta);
     } else { // Rescaling for Z
         scaling = 1/Z;
         scaling_der = -eta*scaling;
@@ -165,7 +182,7 @@ int PlotSet::phase_diagnosis(){
 
     size_t start, end;
     if(plot_size < 21){
-		start = 1;
+        start = 1;
     } else {
         start = plot_size-20;
     }
@@ -191,6 +208,7 @@ int PlotSet::phase_diagnosis(){
 
         }
         if(ordered){
+            phase = 2;
             return 2;
         }
     }
@@ -198,15 +216,15 @@ int PlotSet::phase_diagnosis(){
 }
 
 std::ostream& operator<<(std::ostream& out, PlotSet plots){
-	for(size_t i=0; i<plots.plot_size(); i++){
-		for(size_t j=0; j<plots.plot_number(); j++){
-			auto slice = plots[j][i];
-			if(j == 0){
-				out << -log(slice[0]) << ", ";
-			}
-			out << slice[1] << ", " << slice[2] << ", ";
-		}
-		out << "\n";
-	}
-	return out;
+    for(size_t i=0; i<plots.plot_size(); i++){
+        for(size_t j=0; j<plots.plot_number(); j++){
+            auto slice = plots[j][i];
+            if(j == 0){
+                out << -log(slice[0]) << ", ";
+            }
+            out << slice[1] << ", " << slice[2] << ", ";
+        }
+        out << "\n";
+    }
+    return out;
 }

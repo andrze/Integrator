@@ -24,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     plots = std::vector<QCustomPlot*>{ui->alphaPlot, ui->lambdaPlot, ui->kappaPlot, ui->vPlot, ui->zPlot,
-                ui->uPlot, ui->yPlot, ui->etaPlot,};
+                ui->uPlot, ui->yPlot, ui->etaPlot,ui->rho4Plot,ui->u21Plot};
 
     is_plot_log = std::vector<bool>{true, true, true, true, false, true, true, false};
 
@@ -40,10 +40,10 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-std::pair<PlotSet, int> MainWindow::integrate(){
+PlotSet MainWindow::integrate(){
     std::vector<double> coords({ui->TSpinBox->value(),1, ui->YspinBox->value(),
                                 ui->uBox->value(), ui->tauBox->value(),
-                                ui->VspinBox->value(), ui->JspinBox->value()});
+                                ui->VspinBox->value(), ui->JspinBox->value(), 0, 0, 0});
     RealVector start(coords);
 
     return integrator.integrate(ui->startTimeBox->value(),
@@ -52,7 +52,7 @@ std::pair<PlotSet, int> MainWindow::integrate(){
                                 start);
 }
 
-std::pair<PlotSet, int> MainWindow::integrate(RealVector start_point){
+PlotSet MainWindow::integrate(RealVector start_point){
 
     return integrator.integrate(ui->startTimeBox->value(),
                                 ui->endTimeBox->value(),
@@ -123,6 +123,7 @@ void MainWindow::on_saveButton_clicked(){
 
 void MainWindow::on_tsenseBox_valueChanged(int arg1){
     this->ui->tauBox->setSingleStep(pow(10.,-arg1));
+    this->ui->TSpinBox->setSingleStep(pow(10.,-arg1));
 }
 
 void MainWindow::on_pushButton_clicked(){
@@ -132,13 +133,13 @@ void MainWindow::on_pushButton_clicked(){
         auto p = integrate();
         {
             std::lock_guard<std::mutex> guard(this->data_mutex);
-            results.push_back(p.first);
+            results.push_back(p);
             last_el = &results.back();
         }
 
         std::string phase;
 
-        int diag = p.second;
+        int diag = p.phase;
         if(diag == 2){
             phase = "Uporządkowana";
         } else if(diag == 1){
@@ -171,26 +172,20 @@ void MainWindow::plot_result(PlotSet *res){
     plot_vals[0] = p[0].values;           // kappa
     plot_vals[1] = p[1].values;           // Z
     plot_vals[2] = p.rescaled(0).values;  // alpha^2
-
-    plot_vals[6] = p.rescaled(3).abs_values();      // u
-    plot_vals[7] = p.rescaled(4).abs_values();      // lambda
+    plot_vals[3] = p.eta_plot();
+    plot_vals[4] = p.rescaled(3).abs_values();      // u
+    plot_vals[5] = p.rescaled(4).abs_values();      // lambda
 
     std::vector<double> u = p[3].abs_values();
     std::vector<double> l = p[4].abs_values();
 
-    for(size_t i=0; i<p[0].values.size(); i++){
-        plot_vals[3].push_back(p.eta(i));                 // eta
+    auto u40_split = posneg_part(p[7].values);
+    plot_vals[6] = u40_split.first;
+    plot_vals[7] = u40_split.second;
 
-        double y = p[2].values[i];
-        if(y >= 0){
-            plot_vals[8].push_back(y); // y positive part
-            plot_vals[9].push_back(0);
-        } else {
-            plot_vals[8].push_back(0);
-            plot_vals[9].push_back(-y); // y negative part
-        }
-    }
-
+    auto y_split = posneg_part(p[2].values);
+    plot_vals[8] = y_split.first;
+    plot_vals[9] = y_split.second;
 
     std::vector<QCustomPlot*> composite_plots{ui->kappaPlot, ui->zPlot, ui->alphaPlot, ui->etaPlot};
     std::vector<bool> logplot{                true,          true,             true, false};
@@ -210,18 +205,17 @@ void MainWindow::plot_result(PlotSet *res){
     add_graph(ui->uPlot, time, p[3].abs_values(), true, 2);
     add_graph(ui->uPlot, time, p[4].abs_values(), true, 2);
 
-    add_graph(ui->lambdaPlot, time, plot_vals[6], true, 2);
-    add_graph(ui->lambdaPlot, time, plot_vals[7], true, 2);
+    add_graph(ui->lambdaPlot, time, plot_vals[4], true, 2);
+    add_graph(ui->lambdaPlot, time, plot_vals[5], true, 2);
 
-    add_graph(ui->yPlot, time, plot_vals[8], true, 2);
-    add_graph(ui->yPlot, time, plot_vals[9], true, 2);
+    add_graph(ui->yPlot, time, y_split.first, true, 2);
+    add_graph(ui->yPlot, time, y_split.second, true, 2);
 
+    add_graph(ui->rho4Plot, time, u40_split.first, true, 2);
+    add_graph(ui->rho4Plot, time, u40_split.second, true, 2);
 
-    add_graph(ui->etaAlphaPlot, plot_vals[0], plot_vals[3]);
-    rescale_axes(ui->etaAlphaPlot, 0., 1., false);
-
-    add_graph(ui->uAlphaPlot, plot_vals[0], p[3].abs_values(), true);
-    rescale_axes(ui->uAlphaPlot, 0., 1., true);
+    add_graph(ui->u21Plot, time, p[8].abs_values(), true, 2);
+    add_graph(ui->u21Plot, time, p[9].abs_values(), true, 2);
 
     ui->ulPlot->xAxis->setScaleType(QCPAxis::stLogarithmic);
     add_graph(ui->ulPlot, p[3].abs_values(), p[4].abs_values(), true);
@@ -241,8 +235,6 @@ void MainWindow::plot_result(PlotSet *res){
 
 void MainWindow::on_clearButton_clicked(){
     std::vector<QCustomPlot*> plots2 = plots;
-    plots2.push_back(ui->etaAlphaPlot);
-    plots2.push_back(ui->uAlphaPlot);
     plots2.push_back(ui->ulPlot);
     plots2.push_back(ui->m2Plot);
     for(auto&& p: plots2){
@@ -258,8 +250,7 @@ void MainWindow::on_StabMatButton_clicked()
     double end_time = ui->endTimeBox->value();
     ui->endTimeBox->setValue(1);
 
-    auto res = integrate();
-    auto plots = res.first;
+    auto plots = integrate();
 
     RealVector base_der = plots.point(1, false);
 
@@ -272,7 +263,7 @@ void MainWindow::on_StabMatButton_clicked()
         double epsilon = start[i]*deviation[i];
         start[i] += epsilon;
 
-        auto dev_plots = integrate(start).first;
+        auto dev_plots = integrate(start);
 
 
         stab_mat.push_back((dev_plots.point(1, false)-base_der)/epsilon);
@@ -329,7 +320,7 @@ void MainWindow::on_fpButton_clicked(){
         auto p = this->integrate();
 
         bool go_to_lower;
-        int phase = p.second;
+        int phase = p.phase;
         if(ui->orderedRadioButton->isChecked()){
             go_to_lower = (phase == 2);
         } else {
@@ -367,7 +358,7 @@ void MainWindow::on_fpButton_clicked(){
         auto p = this->integrate();
 
         bool go_to_lower;
-        int phase = p.second;
+        int phase = p.phase;
         if(ui->orderedRadioButton->isChecked()){
             go_to_lower = (phase == 2);
         } else {
@@ -399,7 +390,7 @@ double MainWindow::find_fp(RealVector start_point){
     while(lower < 0 || upper < 0){
         auto p = this->integrate(start_point);
 
-        int phase = p.second;
+        int phase = p.phase;
 
         bool go_to_lower;
         if(ui->orderedRadioButton->isChecked()){
@@ -434,7 +425,7 @@ double MainWindow::find_fp(RealVector start_point){
         auto p = this->integrate(start_point);
 
         bool go_to_lower;
-        int phase = p.second;
+        int phase = p.phase;
         if(ui->orderedRadioButton->isChecked()){
             go_to_lower = (phase <= 1);
         } else {

@@ -28,7 +28,8 @@ SOURCES += main.cpp \
     qcp_extension.cpp \
     regulator.cpp \
     realvector.cpp \
-    equationset.cpp
+    equationset.cpp \
+    gaussquadrature.cpp
 
 HEADERS += \
     simpson.h \
@@ -41,7 +42,8 @@ HEADERS += \
     physics_cubic.h \
     mainwindow.h \
     integrator.h \
-    equationset.h
+    equationset.h \
+    gaussquadrature.h
 
 QMAKE_CXXFLAGS += -std=c++14
 

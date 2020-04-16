@@ -24,8 +24,8 @@ private:
     Integrator integrator;
     //std::unique_ptr<std::thread> worker;
 
-    std::pair<PlotSet,int> integrate();
-    std::pair<PlotSet,int> integrate(RealVector start_point);
+    PlotSet integrate();
+    PlotSet integrate(RealVector start_point);
     std::vector<PlotSet > results;
     void reset_axes();
     std::vector<QCustomPlot*> plots;

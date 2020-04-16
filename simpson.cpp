@@ -6,7 +6,7 @@
 #include "simpson.h"
 
 double integral(std::function<double(double)> func){
-    const double h0=0.01;
+    const double h0=0.03;
     double q=0.;
     double result=0.;
     int num_steps=51;

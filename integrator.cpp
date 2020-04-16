@@ -18,7 +18,7 @@ int signum(double x){
 
 Integrator::Integrator()
 {
-
+    this->d = -1;
 }
 
 Integrator::Integrator(EquationSet equations){
@@ -26,8 +26,8 @@ Integrator::Integrator(EquationSet equations){
     this->d = equations.d;
 }
 
-std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, double delta_t,
-                                              RealVector starting_point, std::vector<PlotSet >* scan){
+PlotSet Integrator::integrate(double start_t, double end_t, double delta_t,
+                              RealVector starting_point, std::vector<PlotSet >* scan){
 
     PlotSet plots(starting_point.coords.size(), d);
     double old_t = start_t;
@@ -58,7 +58,7 @@ std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, doub
         if( static_cast<int>(t) != static_cast<int>(old_t)){
             if(scan && static_cast<int>(t) <= 50){
                 scan->back().push_to_each(plots.back_vals(), plots.back_ders(), plots.back_time());
-        	}
+            }
         }
 
         RealVector new_point = this->rk4(delta_t, &plots);
@@ -69,11 +69,11 @@ std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, doub
             bool parameter_jump = false, parameter_changed_sign = false;
             if(std::abs(point[j]) <= std::numeric_limits<double>::epsilon()) continue;
 
-            if(j!=2){
+            if(j==1||j==3){
                 parameter_changed_sign = (signum(new_point[j]) != signum(point[j]));
             }
-            if(j==0||j==3||j==4){
-                parameter_jump =  std::abs(std::log(std::abs(new_point[j]/point[j]))) > 0.2;
+            if(j==0||j==3||j==5){
+                parameter_jump =  std::abs(std::log(std::abs(new_point[j]/point[j]))) > 1;
             }
             if(parameter_changed_sign || parameter_jump){
                 end_points.insert(j);
@@ -82,15 +82,15 @@ std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, doub
 
         }
         if(plots.plot_size() > 1){
-			double eta_k1 = plots.eta(plots.plot_size()-2);
-			double eta_k = plots.eta(plots.plot_size()-1);
+            double eta_k1 = plots.eta(plots.plot_size()-2);
+            double eta_k = plots.eta(plots.plot_size()-1);
             if(eta_k < -0.01 || eta_k - eta_k1 > 0.15){
-				end = true;
-				end_points.insert(6);
-			}
+                end = true;
+                end_points.insert(point.coords.size());
+            }
         }
         if(end){
-        	plots.pop_from_each();
+            plots.pop_from_each();
 
             std::cout<<"Zakończono w punkcie "<<point;
             if(plots.plot_size()>0){
@@ -102,11 +102,8 @@ std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, doub
                 std::cout<<p<<", ";
             }
             std::cout<<std::endl;
-            int ph = plots.phase_diagnosis();
-            if(ph == 2){
-                ph = 0;
-            }
-            return std::make_pair(plots, ph);
+            plots.phase = plots.phase_diagnosis();
+            return plots;
         }
         old_t = t;
 
@@ -118,13 +115,14 @@ std::pair<PlotSet, int> Integrator::integrate(double start_t, double end_t, doub
                 ordered_phase_stalling--;
             } else {
                 std::cout<<"Zakończono w fazie uporządkowanej\n";
-
-                return std::make_pair(plots, 2);
+                plots.phase = 2;
+                return plots;
             }
         }
     }
     std::cerr<<"Zakończono na końcu czasu symulacji\n";
-    return std::make_pair(plots, -1);
+    plots.phase = -1;
+    return plots;
 }
 
 RealVector Integrator::rk4(double delta_t, PlotSet* plots){

@@ -134,3 +134,23 @@ void add_graph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double>
 
     plot->replot();
 }
+
+
+std::pair<std::vector<double>, std::vector<double> > posneg_part(std::vector<double> vals){
+
+    std::vector<double> positive, negative;
+
+    for(auto && v: vals){
+
+        if(v > 0){
+            positive.push_back(v);
+            negative.push_back(0.);
+        } else {
+            positive.push_back(0);
+            negative.push_back(-v);
+        }
+    }
+    return std::make_pair(positive, negative);
+}
+
+

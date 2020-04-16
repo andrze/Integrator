@@ -11,8 +11,8 @@ public:
     Integrator();
     Integrator(EquationSet equations);
 
-    std::pair<PlotSet, int> integrate(double start_t, double end_t, double delta_t,
-                                      RealVector starting_point, std::vector<PlotSet >* scan=nullptr);
+    PlotSet integrate(double start_t, double end_t, double delta_t,
+                      RealVector starting_point, std::vector<PlotSet >* scan=nullptr);
     EquationSet equations;
 
 private:

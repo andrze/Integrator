@@ -13,4 +13,6 @@ void rescale_axes(QCustomPlot* plot, std::pair<double,double> x_range, std::pair
 void add_graph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double> vals,
               bool logplot=false, int parts=1);
 
+std::pair<std::vector<double>, std::vector<double> > posneg_part(std::vector<double> vals);
+
 #endif // QCP_EXTENSION_H
