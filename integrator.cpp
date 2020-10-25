@@ -76,10 +76,10 @@ PlotSet Integrator::integrate(double start_t, double end_t, double delta_t,
         }
         if(discontinuity){
             plots.pop_from_each();
-            if(delta_t<100*std::numeric_limits<double>::epsilon()){
+            if(delta_t<1e-5){
                 auto rescaled_kappa = plots.rescaled(0, size_t(n_steps-1));
                 double log_der = std::abs(rescaled_kappa.second/rescaled_kappa.first);
-                if(std::abs(log_der)>0.1){
+                if(log_der>-0.1){
                     plots.phase = 0;
                     std::cout<<"Zakończono w fazie nieuporządkowanej (nieciągłość kappa)\n";
                 } else {
