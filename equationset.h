@@ -7,11 +7,11 @@
 class EquationSet
 {
 public:
-    EquationSet(bool cubic=true, double dimension=2);
+    EquationSet(double dimension=2, double n=2);
 
-    bool cubic;
     double d;
     double d_factor;
+    double n;
 
     RealVector evaluate(RealVector point);
 };

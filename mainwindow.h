@@ -53,12 +53,11 @@ private slots:
     void on_StabMatButton_clicked();
     void on_xMinSpinBox_valueChanged(double);
     void on_xMaxSpinBox_valueChanged(double);
-    void on_cubicRadioButton_clicked();
-    void on_hexRadioButton_clicked();
     void on_fpButton_clicked();
     //void on_CLButton_clicked();
     void on_stopButton_clicked();
     void on_dimensionBox_valueChanged(double arg1);
+    void on_NspinBox_valueChanged(double arg1);
 };
 
 #endif // MAINWINDOW_H

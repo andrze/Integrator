@@ -10,7 +10,7 @@
 #include "ui_mainwindow.h"
 #include "integrator.h"
 #include "realvector.h"
-#include "physics_cubic.h"
+#include "physics.h"
 #include <iostream>
 #include <iomanip>
 #include <limits>
@@ -23,12 +23,12 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    plots = std::vector<QCustomPlot*>{ui->alphaPlot, ui->lambdaPlot, ui->kappaPlot, ui->vPlot, ui->zPlot,
-                ui->uPlot, ui->yPlot, ui->etaPlot,ui->rho4Plot,ui->u21Plot};
+    plots = std::vector<QCustomPlot*>{ui->alphaPlot, ui->lambdaPlot, ui->kappaPlot, ui->g3Plot, ui->zPlot,
+                ui->uPlot, ui->yPlot, ui->etaPlot,ui->rho4Plot,ui->u21Plot, ui->mPlot, ui->m2Plot};
 
-    is_plot_log = std::vector<bool>{true, true, true, true, false, true, true, false};
+    is_plot_log = std::vector<bool>{true, true, true, true, false, true, true, false, true, true, true, true};
 
-    EquationSet equations(ui->cubicRadioButton->isChecked(), ui->dimensionBox->value());
+    EquationSet equations(ui->dimensionBox->value(), ui->NspinBox->value());
     integrator = Integrator(equations);
     ui->tsenseBox->valueChanged(ui->tsenseBox->value());
     this->reset_axes();
@@ -41,9 +41,7 @@ MainWindow::~MainWindow()
 }
 
 PlotSet MainWindow::integrate(){
-    std::vector<double> coords({ui->TSpinBox->value(),1, ui->YspinBox->value(),
-                                ui->uBox->value(), ui->tauBox->value(),
-                                ui->VspinBox->value(), ui->JspinBox->value(), 0, 0, 0});
+    std::vector<double> coords({ui->TSpinBox->value(),ui->uBox->value(),1});
     RealVector start(coords);
 
     return integrator.integrate(ui->startTimeBox->value(),
@@ -166,51 +164,58 @@ void MainWindow::plot_result(PlotSet *res){
     std::array<std::vector<double>, 11> plot_vals;
     std::vector<double> time = p[0].times;
 
-    add_graph(ui->vPlot, time, p[5].abs_values(), true, 2);
-    add_graph(ui->vPlot, time, p[6].abs_values(), true, 2);
+    //add_graph(ui->vPlot, time, p[5].abs_values(), true, 2);
+    //add_graph(ui->vPlot, time, p[6].abs_values(), true, 2);
 
     plot_vals[0] = p[0].values;           // kappa
-    plot_vals[1] = p[1].values;           // Z
+    plot_vals[1] = p[2].values;           // Z
     plot_vals[2] = p.rescaled(0).values;  // alpha^2
     plot_vals[3] = p.eta_plot();
-    plot_vals[4] = p.rescaled(3).abs_values();      // u
-    plot_vals[5] = p.rescaled(4).abs_values();      // lambda
+    plot_vals[7] = p.rescaled(1).abs_values();      // u
+    //plot_vals[5] = p.rescaled(4).abs_values();      // lambda
 
-    std::vector<double> u = p[3].abs_values();
-    std::vector<double> l = p[4].abs_values();
+    std::vector<double> u = p[1].abs_values();
+    //std::vector<double> l = p[4].abs_values();
+    for(size_t i=0; i<p[0].values.size(); i++){
+        plot_vals[4].push_back(2*plot_vals[0][i]*u[i]);
+        plot_vals[5].push_back(2*plot_vals[2][i]*plot_vals[7][i]);
+        plot_vals[6].push_back(plot_vals[4][i]*u[i]);
+    }
 
-    auto u40_split = posneg_part(p[7].values);
-    plot_vals[6] = u40_split.first;
-    plot_vals[7] = u40_split.second;
+    //auto u40_split = posneg_part(p[7].values);
+    //plot_vals[6] = u40_split.first;
+    //plot_vals[7] = u40_split.second;
 
-    auto y_split = posneg_part(p[2].values);
-    plot_vals[8] = y_split.first;
-    plot_vals[9] = y_split.second;
+    //auto y_split = posneg_part(p[2].values);
+    //plot_vals[8] = y_split.first;
+    //plot_vals[9] = y_split.second;
 
-    std::vector<QCustomPlot*> composite_plots{ui->kappaPlot, ui->zPlot, ui->alphaPlot, ui->etaPlot};
-    std::vector<bool> logplot{                true,          true,             true, false};
+    std::vector<QCustomPlot*> composite_plots{ui->kappaPlot, ui->zPlot, ui->alphaPlot, ui->etaPlot, ui->mPlot, ui->m2Plot, ui->g3Plot};
+    std::vector<bool> logplot{                true,          true,             true, false, true, true, true};
     for(size_t i=0; i<composite_plots.size(); i++){
         add_graph(composite_plots[i], time, plot_vals[i], logplot[i]);
     }
 
-    ui->m2Plot->xAxis->setScaleType(QCPAxis::stLogarithmic);
+    /*ui->m2Plot->xAxis->setScaleType(QCPAxis::stLogarithmic);
     add_graph(ui->m2Plot, p[5].abs_values(), p[6].abs_values(), true, 1);
 
 
     auto m2range = get_x_range(ui->m2Plot);
     m2range.upper = std::min(200., m2range.upper);
     rescale_axes(ui->m2Plot, m2range.lower, m2range.upper, true);
+*/
 
+    add_graph(ui->uPlot, time, p[1].abs_values(), true, 1);
+    //add_graph(ui->uPlot, time, p[4].abs_values(), true, 2);
 
-    add_graph(ui->uPlot, time, p[3].abs_values(), true, 2);
-    add_graph(ui->uPlot, time, p[4].abs_values(), true, 2);
+    add_graph(ui->lambdaPlot, time, plot_vals[7], true, 1);
+    //add_graph(ui->lambdaPlot, time, plot_vals[5], true, 2);
 
-    add_graph(ui->lambdaPlot, time, plot_vals[4], true, 2);
-    add_graph(ui->lambdaPlot, time, plot_vals[5], true, 2);
-
-    add_graph(ui->yPlot, time, y_split.first, true, 2);
-    add_graph(ui->yPlot, time, y_split.second, true, 2);
-
+    ui->yPlot->xAxis->setScaleType(QCPAxis::stLogarithmic);
+    add_graph(ui->yPlot, plot_vals[0], plot_vals[7], true);
+    auto range = get_x_range(ui->yPlot);
+    range.upper = std::min(200., range.upper);
+/*
     add_graph(ui->rho4Plot, time, u40_split.first, true, 2);
     add_graph(ui->rho4Plot, time, u40_split.second, true, 2);
 
@@ -228,15 +233,13 @@ void MainWindow::plot_result(PlotSet *res){
     QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog),logTicker2(new QCPAxisTickerLog);
     ui->m2Plot->xAxis->setTicker(logTicker);
     ui->ulPlot->xAxis->setTicker(logTicker2);
-
+*/
     reset_axes();
     std::cout<<"\a"<<std::flush;
 }
 
 void MainWindow::on_clearButton_clicked(){
     std::vector<QCustomPlot*> plots2 = plots;
-    plots2.push_back(ui->ulPlot);
-    plots2.push_back(ui->m2Plot);
     for(auto&& p: plots2){
         p->clearPlottables();
         p->replot();
@@ -296,16 +299,8 @@ void MainWindow::on_xMaxSpinBox_valueChanged(double){
 }
 
 void MainWindow::restart_integrator(){
-    EquationSet equations(ui->cubicRadioButton->isChecked(), ui->dimensionBox->value());
+    EquationSet equations(ui->dimensionBox->value(), ui->NspinBox->value());
     integrator = Integrator(equations);
-}
-
-void MainWindow::on_cubicRadioButton_clicked(){
-    restart_integrator();
-}
-
-void MainWindow::on_hexRadioButton_clicked(){
-    restart_integrator();
 }
 
 void MainWindow::on_fpButton_clicked(){
@@ -526,3 +521,8 @@ void MainWindow::on_dimensionBox_valueChanged(double)
     restart_integrator();
 }
 
+
+void MainWindow::on_NspinBox_valueChanged(double )
+{
+    restart_integrator();
+}

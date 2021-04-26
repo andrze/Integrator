@@ -93,8 +93,8 @@ void rescale_axes(QCustomPlot* plot, std::pair<double,double> x_range, std::pair
 
 void add_graph(QCustomPlot* plot, std::vector<double> xvals, std::vector<double> vals,
               bool logplot, int parts){
-    QVector<double> x = QVector<double>::fromStdVector(xvals);
-    QVector<double> y = QVector<double>::fromStdVector(vals);
+    QVector<double> x = QVector<double>(xvals.begin(),xvals.end());
+    QVector<double> y = QVector<double>(vals.begin(),vals.end());
 
     if(logplot){
         plot->yAxis->setScaleType(QCPAxis::stLogarithmic);

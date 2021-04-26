@@ -20,9 +20,9 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 SOURCES += main.cpp \
     integrator.cpp \
     mainwindow.cpp \
+    physics.cpp \
     qcustomplot.cpp \
     simpson.cpp \
-    physics_cubic.cpp \
     plot.cpp \
     plotset.cpp \
     qcp_extension.cpp \
@@ -32,6 +32,7 @@ SOURCES += main.cpp \
     gaussquadrature.cpp
 
 HEADERS += \
+    physics.h \
     simpson.h \
     regulator.h \
     realvector.h \
@@ -39,7 +40,6 @@ HEADERS += \
     qcp_extension.h \
     plotset.h \
     plot.h \
-    physics_cubic.h \
     mainwindow.h \
     integrator.h \
     equationset.h \

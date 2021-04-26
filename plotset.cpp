@@ -97,7 +97,7 @@ size_t PlotSet::plot_number(){
 }
 
 double PlotSet::eta(size_t k){
-    return plots[1].log_der(k);
+    return plots[2].log_der(k);
 }
 
 std::vector<double> PlotSet::eta_plot(){
@@ -115,16 +115,13 @@ std::pair<double,double> PlotSet::rescaled(size_t plot, size_t pos){
         throw std::invalid_argument("Argument larger than number of plots");
     }
 
-    if(this->plot_number() < 5){
-        throw std::invalid_argument("Not enough plots to allow rescaling");
-    }
 
     if(pos >= plots[plot].size()){
         throw std::invalid_argument("Rescaled position out of plot scope");
     }
 
-    double Z = plots[1].values[pos];
-    double eta = plots[1].log_der(pos);
+    double Z = plots[2].values[pos];
+    double eta = plots[2].log_der(pos);
 
     Plot rescaled_plot = plots[plot];
     double time = rescaled_plot.times[pos];
@@ -134,18 +131,9 @@ std::pair<double,double> PlotSet::rescaled(size_t plot, size_t pos){
     if(plot==0){ // Rescaling for kappa
         scaling = Z*std::exp(time*(-d+2));
         scaling_der = scaling*(-d+2-eta);
-    } else if(plot==2){  // Rescaling for Y
-        scaling = std::pow(Z,-2)*std::exp(time*(d-2));
-        scaling_der = scaling*(d-2+2*eta);
-    } else if(plot==3 || plot==4){ // Rescaling for u and lambda
+    } else if(plot==1){ // Rescaling for u and lambda
         scaling = std::pow(Z,-2)*std::exp(time*(d-4));
         scaling_der = scaling*(d-4+2*eta);
-    } else if(plot==5 || plot==6){ // Rescaling for v and J
-        scaling = std::pow(Z,-3)*std::exp(time*(2*d-6));
-        scaling_der = scaling*(2*d-6+3*eta);
-    } else if(plot==7 || plot==8 || plot==9){ // Rescaling for u40, u21 and u02
-        scaling = std::pow(Z,-4)*std::exp(time*(3*d-8));
-        scaling_der = scaling*(3*d-8+4*eta);
     } else { // Rescaling for Z
         scaling = 1/Z;
         scaling_der = -eta*scaling;
@@ -158,10 +146,6 @@ std::pair<double,double> PlotSet::rescaled(size_t plot, size_t pos){
 Plot PlotSet::rescaled(size_t plot){
     if(plot > this->plot_number()){
         throw std::invalid_argument("Argument larger than number of plots");
-    }
-
-    if(this->plot_number() < 5){
-        throw std::invalid_argument("Not enough plots to allow rescaling");
     }
 
 
@@ -197,9 +181,8 @@ int PlotSet::phase_diagnosis(){
 
         for(size_t j=0; j<plot_number(); j++){
             auto rescaling = rescaled(j, i);
-            if(j==1) continue;
+            if(j==2) continue;
             if(rescaling.first < std::numeric_limits<double>::epsilon()) continue;
-            if(j>0 && std::abs(plots[4].values.front()) < std::numeric_limits<double>::epsilon()) continue;
 
             double log_der = std::abs(rescaling.second/rescaling.first);
             if(log_der>1e-04){

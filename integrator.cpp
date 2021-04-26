@@ -67,7 +67,7 @@ PlotSet Integrator::integrate(double start_t, double end_t, double delta_t,
             if(j==3){
                 parameter_changed_sign = (signum(new_point[j]) != signum(point[j]));
             }
-            if(j==0||j==3||j==5){
+            if(j==0||j==1||j==5){
                 parameter_jump =  std::abs(std::log(std::abs(new_point[j]/point[j]))) > 0.5;
             }
             if(parameter_changed_sign || parameter_jump){
@@ -76,7 +76,7 @@ PlotSet Integrator::integrate(double start_t, double end_t, double delta_t,
         }
         if(discontinuity){
             plots.pop_from_each();
-            if(delta_t<1e-5){
+            if(delta_t<1e-3){
                 auto rescaled_kappa = plots.rescaled(0, size_t(n_steps-1));
                 double log_der = std::abs(rescaled_kappa.second/rescaled_kappa.first);
                 if(log_der>-0.1){

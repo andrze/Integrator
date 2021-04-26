@@ -102,7 +102,7 @@
      <string>Save</string>
     </property>
    </widget>
-   <widget class="QCustomPlot" name="ulPlot" native="true">
+   <widget class="QCustomPlot" name="mPlot" native="true">
     <property name="geometry">
      <rect>
       <x>200</x>
@@ -132,7 +132,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QCustomPlot" name="vPlot" native="true">
+   <widget class="QCustomPlot" name="g3Plot" native="true">
     <property name="geometry">
      <rect>
       <x>600</x>
@@ -156,6 +156,9 @@
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="tauBox">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>550</x>
@@ -362,7 +365,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>u &amp; λ dimensionless</string>
+     <string>u dimensionless</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -378,7 +381,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>lambda vs u</string>
+     <string>Mass dimensionless</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -394,7 +397,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>u &amp; λ dimensional</string>
+     <string>u dimensional</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -442,7 +445,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>J vs V</string>
+     <string>Mass dimensional</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -458,7 +461,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>V and J - hexic couplings</string>
+     <string>Gamma(3) dimensionless</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -574,7 +577,7 @@
      <double>0.001000000000000</double>
     </property>
     <property name="value">
-     <double>0.087200000000000</double>
+     <double>3.500000000000000</double>
     </property>
    </widget>
    <widget class="QPushButton" name="clearButton">
@@ -741,41 +744,6 @@
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="QWidget" name="verticalLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>489</x>
-      <y>39</y>
-      <width>177</width>
-      <height>54</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QRadioButton" name="cubicRadioButton">
-       <property name="text">
-        <string>Cubic anisotropy</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QRadioButton" name="hexRadioButton">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="tabletTracking">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Hexagonal anisotropy</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
    <widget class="QDoubleSpinBox" name="criticalLineSpinBox">
     <property name="geometry">
      <rect>
@@ -879,7 +847,7 @@
      <double>1.000000000000000</double>
     </property>
     <property name="value">
-     <double>8.000000000000000</double>
+     <double>0.100000000000000</double>
     </property>
    </widget>
    <widget class="QLabel" name="label_12">
@@ -934,6 +902,9 @@
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="YspinBox">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>400</x>
@@ -979,6 +950,9 @@
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="VspinBox">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>260</x>
@@ -1000,7 +974,7 @@
      <double>0.000000000000000</double>
     </property>
    </widget>
-   <widget class="QDoubleSpinBox" name="JspinBox">
+   <widget class="QDoubleSpinBox" name="NspinBox">
     <property name="geometry">
      <rect>
       <x>90</x>
@@ -1013,13 +987,13 @@
      <number>4</number>
     </property>
     <property name="minimum">
-     <double>-20.000000000000000</double>
+     <double>-2.000000000000000</double>
     </property>
     <property name="singleStep">
-     <double>0.010000000000000</double>
+     <double>0.100000000000000</double>
     </property>
     <property name="value">
-     <double>0.000000000000000</double>
+     <double>1.000000000000000</double>
     </property>
    </widget>
    <widget class="QLabel" name="label_33">
@@ -1032,7 +1006,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>J</string>
+     <string>N</string>
     </property>
    </widget>
   </widget>
